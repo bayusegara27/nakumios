@@ -94,6 +94,7 @@ private:
     void loadBookmarks();
     void saveBookmarks();
     void addToHistory(const QString &path);
+    bool copyDirectoryRecursive(const QString &srcPath, const QString &destPath);
     
     QString m_currentPath;
     QStringList m_history;

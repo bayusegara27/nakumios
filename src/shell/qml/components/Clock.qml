@@ -12,6 +12,19 @@ Item {
     
     property bool showDate: false
     property bool use24Hour: true
+    property int updateTrigger: 0
+    
+    function formatCurrentTime() {
+        var now = new Date()
+        var timeStr = root.use24Hour 
+            ? Qt.formatTime(now, "hh:mm")
+            : Qt.formatTime(now, "h:mm AP")
+        
+        if (root.showDate) {
+            return Qt.formatDate(now, "ddd, MMM d") + "  " + timeStr
+        }
+        return timeStr
+    }
     
     implicitWidth: clockText.width + DesignTokens.spacingMedium
     implicitHeight: DesignTokens.panelHeight - DesignTokens.spacingSmall * 2
@@ -34,17 +47,8 @@ Item {
         font.weight: Font.Medium
         color: DesignTokens.textPrimary
         
-        text: {
-            var now = new Date()
-            var timeStr = root.use24Hour 
-                ? Qt.formatTime(now, "hh:mm")
-                : Qt.formatTime(now, "h:mm AP")
-            
-            if (root.showDate) {
-                return Qt.formatDate(now, "ddd, MMM d") + "  " + timeStr
-            }
-            return timeStr
-        }
+        // Bind to updateTrigger to force re-evaluation when timer fires
+        text: root.updateTrigger >= 0 ? root.formatCurrentTime() : ""
     }
     
     MouseArea {
@@ -61,7 +65,7 @@ Item {
         running: true
         repeat: true
         onTriggered: {
-            clockText.text = clockText.text // Force re-evaluation
+            root.updateTrigger++
         }
     }
 }

@@ -365,16 +365,6 @@ void WindowManager::onActivatedChanged()
     }
 }
 
-void WindowManager::updateZOrder()
-{
-    // Sort by zOrder and reassign
-    for (int i = 0; i < m_windows.count(); ++i) {
-        m_windows[i].zOrder = i;
-    }
-    
-    emit dataChanged(createIndex(0, 0), createIndex(m_windows.count() - 1, 0), {ZOrderRole});
-}
-
 int WindowManager::findWindow(QWaylandXdgToplevel *toplevel) const
 {
     for (int i = 0; i < m_windows.count(); ++i) {

@@ -127,6 +127,7 @@ component DockItem: Item {
     
     // Icon or fallback text
     Image {
+        id: dockItemIcon
         anchors.centerIn: parent
         width: 28
         height: 28
@@ -141,7 +142,7 @@ component DockItem: Item {
         font.pixelSize: 20
         font.weight: Font.Bold
         color: DesignTokens.textPrimary
-        visible: dockItem.iconSource === "" || iconImage.status !== Image.Ready
+        visible: dockItem.iconSource === "" || dockItemIcon.status !== Image.Ready
     }
     
     // Running indicator dot

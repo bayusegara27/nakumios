@@ -78,7 +78,7 @@ SettingsPage {
                             "#FDCB6E", // Yellow
                             "#E17055", // Orange
                             "#D63031", // Red
-                            "#6C5CE7"  // Pink
+                            "#E84393"  // Pink
                         ]
                         
                         delegate: Rectangle {

@@ -10,8 +10,12 @@
 #include <QDBusInterface>
 #include <QDBusReply>
 #include <QStandardPaths>
+#include <QRegularExpression>
 
 namespace NakumiOS {
+
+// Static regex for removing field codes from .desktop Exec strings
+static const QRegularExpression s_fieldCodeRegex(QStringLiteral("%[fFuUdDnNickvm]"));
 
 SessionManager::SessionManager(QObject *parent)
     : QObject(parent)
@@ -183,7 +187,7 @@ void SessionManager::launchAutoStartApps()
         
         if (!hidden && !exec.isEmpty()) {
             // Remove field codes
-            exec.remove(QRegularExpression(QStringLiteral("%[fFuUdDnNickvm]")));
+            exec.remove(s_fieldCodeRegex);
             exec = exec.trimmed();
             
             QProcess::startDetached(

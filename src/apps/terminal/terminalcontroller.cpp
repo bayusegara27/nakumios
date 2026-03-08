@@ -8,9 +8,14 @@
 #include <QClipboard>
 #include <QDir>
 #include <QProcessEnvironment>
+#include <QRegularExpression>
 #include <cstdlib>
 
 namespace NakumiOS {
+
+// Thread-safe static ANSI escape code regex
+Q_GLOBAL_STATIC_WITH_ARGS(QRegularExpression, s_ansiRegex, 
+    (QStringLiteral("\x1b\\[[0-9;]*[a-zA-Z]")))
 
 TerminalController::TerminalController(QObject *parent)
     : QObject(parent)
@@ -287,8 +292,7 @@ QString TerminalController::processAnsiCodes(const QString &text)
     QString result = text;
     
     // Remove some common control sequences (simplified)
-    static QRegularExpression ansiRegex(QStringLiteral("\x1b\\[[0-9;]*[a-zA-Z]"));
-    result.remove(ansiRegex);
+    result.remove(*s_ansiRegex);
     
     // Remove bell character
     result.remove(QChar(0x07));

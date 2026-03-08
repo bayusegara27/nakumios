@@ -92,7 +92,6 @@ private slots:
     void onActivatedChanged();
 
 private:
-    void updateZOrder();
     int findWindow(QWaylandXdgToplevel *toplevel) const;
     
     QList<WindowInfo> m_windows;

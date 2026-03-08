@@ -293,6 +293,41 @@ void FileManagerController::cutItem(const QString &path)
     m_clipboardIsCut = true;
 }
 
+bool FileManagerController::copyDirectoryRecursive(const QString &srcPath, const QString &destPath)
+{
+    QDir srcDir(srcPath);
+    if (!srcDir.exists()) {
+        return false;
+    }
+    
+    QDir destDir(destPath);
+    if (!destDir.exists()) {
+        destDir.mkpath(destPath);
+    }
+    
+    // Copy files
+    const QStringList files = srcDir.entryList(QDir::Files | QDir::Hidden);
+    for (const QString &file : files) {
+        QString srcFile = srcPath + QDir::separator() + file;
+        QString destFile = destPath + QDir::separator() + file;
+        if (!QFile::copy(srcFile, destFile)) {
+            return false;
+        }
+    }
+    
+    // Recursively copy subdirectories
+    const QStringList dirs = srcDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden);
+    for (const QString &dir : dirs) {
+        QString srcSubDir = srcPath + QDir::separator() + dir;
+        QString destSubDir = destPath + QDir::separator() + dir;
+        if (!copyDirectoryRecursive(srcSubDir, destSubDir)) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 void FileManagerController::paste()
 {
     if (m_clipboardPath.isEmpty()) {
@@ -302,13 +337,17 @@ void FileManagerController::paste()
     QFileInfo srcInfo(m_clipboardPath);
     QString destPath = m_currentPath + QDir::separator() + srcInfo.fileName();
     
+    // Check if destination already exists
+    if (QFileInfo::exists(destPath)) {
+        emit errorOccurred(QStringLiteral("Destination already exists: ") + srcInfo.fileName());
+        return;
+    }
+    
     bool success = false;
     
     if (srcInfo.isDir()) {
         // Copy directory recursively
-        QDir srcDir(m_clipboardPath);
-        success = srcDir.mkpath(destPath);
-        // Simplified: would need recursive copy for full implementation
+        success = copyDirectoryRecursive(m_clipboardPath, destPath);
     } else {
         success = QFile::copy(m_clipboardPath, destPath);
     }

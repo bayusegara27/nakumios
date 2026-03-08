@@ -12,9 +12,13 @@
 #include <QDBusConnection>
 #include <QDBusInterface>
 #include <QDBusReply>
+#include <QRegularExpression>
 #include <algorithm>
 
 namespace NakumiOS {
+
+// Static regex for removing field codes from .desktop Exec strings
+static const QRegularExpression s_fieldCodeRegex(QStringLiteral("%[fFuUdDnNickvm]"));
 
 ShellController::ShellController(QObject *parent)
     : QObject(parent)
@@ -102,7 +106,7 @@ void ShellController::launchApplication(const QString &desktopFile)
             QString exec = app.exec;
             
             // Remove field codes from exec string
-            exec.remove(QRegularExpression(QStringLiteral("%[fFuUdDnNickvm]")));
+            exec.remove(s_fieldCodeRegex);
             exec = exec.trimmed();
             
             if (app.terminal) {
