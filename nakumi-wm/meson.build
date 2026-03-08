@@ -13,7 +13,7 @@ project(
 cc = meson.get_compiler('c')
 
 # Core dependencies
-wlroots = dependency('wlroots', version: '>= 0.17')
+wlroots = dependency('wlroots-0.18', version: '>= 0.18.0')
 wayland_server = dependency('wayland-server')
 wayland_protocols = dependency('wayland-protocols')
 xkbcommon = dependency('xkbcommon')
