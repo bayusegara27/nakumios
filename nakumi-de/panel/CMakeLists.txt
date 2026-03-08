@@ -38,18 +38,41 @@ find_program(QT_WAYLAND_SCANNER
     REQUIRED
 )
 
-set(LAYER_SHELL_XML
+set(LAYER_SHELL_XML_ORIG
     "${CMAKE_SOURCE_DIR}/../../nakumi-wm/protocols/wlr-layer-shell-unstable-v1.xml")
 
-# Generate client-side C++ header from the layer-shell protocol XML
-# IMPORTANT: The protocol XML uses "namespace" as a parameter name, which is a
-# C++ reserved keyword.  We pipe every generated file through sed to rename
-# the identifier to "name_space" so the code compiles as valid C++.
-#
-# NOTE: qtwaylandscanner writes to stdout (unlike wayland-scanner which accepts
-# an output file argument).  CMake's add_custom_command does not support shell
-# output redirection, so we use a small cmake -P script with execute_process
-# to capture stdout into a file.
+# ---- Pre-process protocol XML ------------------------------------------------
+# The protocol XML uses "namespace" as a parameter name (<arg name="namespace">).
+# Since "namespace" is a C++ reserved keyword, we create a modified copy of the
+# XML that renames the argument to "name_space" BEFORE feeding it to any code
+# generator.  This is more robust than post-processing generated files because
+# it avoids shell-escaping issues with sed word-boundary patterns (\b) across
+# CMake → Makefile → shell.
+# ------------------------------------------------------------------------------
+set(LAYER_SHELL_XML "${CMAKE_CURRENT_BINARY_DIR}/wlr-layer-shell-unstable-v1.xml")
+
+# cmake -P script that copies a file then does an in-place sed replacement.
+# Using a script avoids any \b / quoting issues in Makefile recipe lines.
+set(PREPROCESS_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/preprocess_xml.cmake")
+file(WRITE "${PREPROCESS_SCRIPT}" [=[
+file(READ "${SRC}" content)
+string(REPLACE "name=\"namespace\"" "name=\"name_space\"" content "${content}")
+file(WRITE "${DST}" "${content}")
+]=])
+
+add_custom_command(
+    OUTPUT ${LAYER_SHELL_XML}
+    COMMAND ${CMAKE_COMMAND}
+        "-DSRC=${LAYER_SHELL_XML_ORIG}"
+        "-DDST=${LAYER_SHELL_XML}"
+        -P "${PREPROCESS_SCRIPT}"
+    DEPENDS ${LAYER_SHELL_XML_ORIG}
+    COMMENT "Pre-processing layer-shell protocol XML (rename C++ keyword)"
+)
+
+# ---- qtwaylandscanner (C++ bindings) ----------------------------------------
+# qtwaylandscanner writes to stdout.  We capture it via a cmake -P script that
+# uses execute_process(OUTPUT_FILE ...).
 set(CAPTURE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/capture_stdout.cmake")
 file(WRITE "${CAPTURE_SCRIPT}" [=[
 separate_arguments(ARG_LIST UNIX_COMMAND "${ARGS}")
@@ -71,7 +94,6 @@ add_custom_command(
         "-DARGS=client-header ${LAYER_SHELL_XML}"
         "-DOUT=${LAYER_SHELL_CLIENT_HEADER}"
         -P "${CAPTURE_SCRIPT}"
-    COMMAND sed -i "s/\\bnamespace\\b/name_space/g" ${LAYER_SHELL_CLIENT_HEADER}
     DEPENDS ${LAYER_SHELL_XML}
     COMMENT "Generating layer-shell client header with qtwaylandscanner"
 )
@@ -83,17 +105,14 @@ add_custom_command(
         "-DARGS=client-code ${LAYER_SHELL_XML}"
         "-DOUT=${LAYER_SHELL_CLIENT_SOURCE}"
         -P "${CAPTURE_SCRIPT}"
-    COMMAND sed -i "s/\\bnamespace\\b/name_space/g" ${LAYER_SHELL_CLIENT_SOURCE}
     DEPENDS ${LAYER_SHELL_XML} ${LAYER_SHELL_CLIENT_HEADER}
     COMMENT "Generating layer-shell client code with qtwaylandscanner"
 )
 
-# Generate wayland-scanner protocol code (low-level C bindings)
-# NOTE: qtwaylandscanner-generated headers expect the wayland- prefix in the
-# include filename (wayland-<protocol>-client-protocol.h), so we must use
-# matching output names here.
-# The same "namespace" → "name_space" sed fix is applied here because this
-# C header is included from C++ translation units.
+# ---- wayland-scanner (low-level C bindings) ----------------------------------
+# qtwaylandscanner-generated headers expect the wayland- prefix in the include
+# filename (wayland-<protocol>-client-protocol.h), so we must use matching
+# output names here.
 set(LAYER_SHELL_PROTOCOL_HEADER
     "${CMAKE_CURRENT_BINARY_DIR}/wayland-wlr-layer-shell-unstable-v1-client-protocol.h")
 set(LAYER_SHELL_PROTOCOL_SOURCE
@@ -102,7 +121,6 @@ set(LAYER_SHELL_PROTOCOL_SOURCE
 add_custom_command(
     OUTPUT ${LAYER_SHELL_PROTOCOL_HEADER}
     COMMAND ${WAYLAND_SCANNER} client-header ${LAYER_SHELL_XML} ${LAYER_SHELL_PROTOCOL_HEADER}
-    COMMAND sed -i "s/\\bnamespace\\b/name_space/g" ${LAYER_SHELL_PROTOCOL_HEADER}
     DEPENDS ${LAYER_SHELL_XML}
     COMMENT "Generating layer-shell wayland client protocol header"
 )
@@ -110,7 +128,6 @@ add_custom_command(
 add_custom_command(
     OUTPUT ${LAYER_SHELL_PROTOCOL_SOURCE}
     COMMAND ${WAYLAND_SCANNER} private-code ${LAYER_SHELL_XML} ${LAYER_SHELL_PROTOCOL_SOURCE}
-    COMMAND sed -i "s/\\bnamespace\\b/name_space/g" ${LAYER_SHELL_PROTOCOL_SOURCE}
     DEPENDS ${LAYER_SHELL_XML}
     COMMENT "Generating layer-shell wayland protocol code"
 )
