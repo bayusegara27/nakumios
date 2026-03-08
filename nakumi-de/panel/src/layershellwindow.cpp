@@ -142,7 +142,7 @@ void LayerShellWindow::onNativeReady() {
             qApp, &QCoreApplication::quit);
 
     /* Commit the surface to trigger the configure event */
-    waylandWindow->waylandSurface()->commit();
+    wl_surface_commit(wlSurface);
 
     m_ready = true;
     emit readyChanged();
