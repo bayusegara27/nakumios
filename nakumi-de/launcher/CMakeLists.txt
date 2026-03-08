@@ -17,7 +17,7 @@ add_executable(nakumi-launcher
     src/main.cpp
     src/appmodel.cpp
     src/appmodel.h
-    qml/qml.qrc
+    qml.qrc
 )
 
 target_link_libraries(nakumi-launcher PRIVATE

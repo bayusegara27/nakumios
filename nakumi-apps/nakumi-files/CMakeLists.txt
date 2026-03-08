@@ -20,7 +20,7 @@ add_executable(nakumi-files
     src/filemanager.h
     src/mountmanager.cpp
     src/mountmanager.h
-    qml/qml.qrc
+    qml.qrc
 )
 
 target_link_libraries(nakumi-files PRIVATE

@@ -95,7 +95,7 @@ add_executable(nakumi-panel
     ${LAYER_SHELL_CLIENT_SOURCE}
     ${LAYER_SHELL_PROTOCOL_HEADER}
     ${LAYER_SHELL_PROTOCOL_SOURCE}
-    qml/qml.qrc
+    qml.qrc
 )
 
 target_include_directories(nakumi-panel PRIVATE

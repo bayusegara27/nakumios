@@ -19,7 +19,7 @@ add_executable(nakumi-term
     src/terminalbackend.h
     src/ansiparser.cpp
     src/ansiparser.h
-    qml/qml.qrc
+    qml.qrc
 )
 
 target_link_libraries(nakumi-term PRIVATE

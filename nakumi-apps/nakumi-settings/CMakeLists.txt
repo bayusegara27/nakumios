@@ -17,7 +17,7 @@ add_executable(nakumi-settings
     src/main.cpp
     src/settingsmanager.cpp
     src/settingsmanager.h
-    qml/qml.qrc
+    qml.qrc
 )
 
 target_link_libraries(nakumi-settings PRIVATE

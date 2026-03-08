@@ -50,6 +50,7 @@ jobs:
             qt6-base-dev \
             qt6-declarative-dev \
             qt6-wayland \
+            qt6-wayland-dev \
             qt6-wayland-dev-tools \
             libqt6waylandclient6 \
             qml6-module-qtquick-controls \
@@ -74,6 +75,18 @@ jobs:
           cd nakumi-wm
           meson setup builddir --prefix=/usr
           ninja -C builddir
+
+      - name: Build nakumi-panel (Desktop panel)
+        run: |
+          cd nakumi-de/panel
+          cmake -B build -DCMAKE_PREFIX_PATH=/usr
+          cmake --build build
+
+      - name: Build nakumi-launcher (Application launcher)
+        run: |
+          cd nakumi-de/launcher
+          cmake -B build -DCMAKE_PREFIX_PATH=/usr
+          cmake --build build
 
       - name: Build nakumi-term (Terminal emulator)
         run: |
