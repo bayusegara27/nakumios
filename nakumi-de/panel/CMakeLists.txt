@@ -52,14 +52,16 @@ set(LAYER_SHELL_CLIENT_SOURCE
 
 add_custom_command(
     OUTPUT ${LAYER_SHELL_CLIENT_HEADER}
-    COMMAND sh -c "${QT_WAYLAND_SCANNER} client-header ${LAYER_SHELL_XML} | sed 's/\\bnamespace\\b/name_space/g' > ${LAYER_SHELL_CLIENT_HEADER}"
+    COMMAND ${QT_WAYLAND_SCANNER} client-header ${LAYER_SHELL_XML} ${LAYER_SHELL_CLIENT_HEADER}
+    COMMAND sed -i "s/\\bnamespace\\b/name_space/g" ${LAYER_SHELL_CLIENT_HEADER}
     DEPENDS ${LAYER_SHELL_XML}
     COMMENT "Generating layer-shell client header with qtwaylandscanner"
 )
 
 add_custom_command(
     OUTPUT ${LAYER_SHELL_CLIENT_SOURCE}
-    COMMAND sh -c "${QT_WAYLAND_SCANNER} client-code ${LAYER_SHELL_XML} | sed 's/\\bnamespace\\b/name_space/g' > ${LAYER_SHELL_CLIENT_SOURCE}"
+    COMMAND ${QT_WAYLAND_SCANNER} client-code ${LAYER_SHELL_XML} ${LAYER_SHELL_CLIENT_SOURCE}
+    COMMAND sed -i "s/\\bnamespace\\b/name_space/g" ${LAYER_SHELL_CLIENT_SOURCE}
     DEPENDS ${LAYER_SHELL_XML} ${LAYER_SHELL_CLIENT_HEADER}
     COMMENT "Generating layer-shell client code with qtwaylandscanner"
 )
@@ -77,14 +79,16 @@ set(LAYER_SHELL_PROTOCOL_SOURCE
 
 add_custom_command(
     OUTPUT ${LAYER_SHELL_PROTOCOL_HEADER}
-    COMMAND sh -c "${WAYLAND_SCANNER} client-header ${LAYER_SHELL_XML} /dev/stdout | sed 's/\\bnamespace\\b/name_space/g' > ${LAYER_SHELL_PROTOCOL_HEADER}"
+    COMMAND ${WAYLAND_SCANNER} client-header ${LAYER_SHELL_XML} ${LAYER_SHELL_PROTOCOL_HEADER}
+    COMMAND sed -i "s/\\bnamespace\\b/name_space/g" ${LAYER_SHELL_PROTOCOL_HEADER}
     DEPENDS ${LAYER_SHELL_XML}
     COMMENT "Generating layer-shell wayland client protocol header"
 )
 
 add_custom_command(
     OUTPUT ${LAYER_SHELL_PROTOCOL_SOURCE}
-    COMMAND sh -c "${WAYLAND_SCANNER} private-code ${LAYER_SHELL_XML} /dev/stdout | sed 's/\\bnamespace\\b/name_space/g' > ${LAYER_SHELL_PROTOCOL_SOURCE}"
+    COMMAND ${WAYLAND_SCANNER} private-code ${LAYER_SHELL_XML} ${LAYER_SHELL_PROTOCOL_SOURCE}
+    COMMAND sed -i "s/\\bnamespace\\b/name_space/g" ${LAYER_SHELL_PROTOCOL_SOURCE}
     DEPENDS ${LAYER_SHELL_XML}
     COMMENT "Generating layer-shell wayland protocol code"
 )
