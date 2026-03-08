@@ -1,0 +1,20 @@
+[Unit]
+Description=NakumiOS Desktop Session
+After=systemd-user-sessions.service plymouth-quit-wait.service
+After=getty@tty1.service
+Wants=dbus.socket
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/nakumi-session
+Restart=always
+RestartSec=3
+User=%I
+Environment=XDG_SESSION_TYPE=wayland
+Environment=XDG_CURRENT_DESKTOP=NakumiOS
+Environment=QT_QPA_PLATFORM=wayland
+Environment=QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+Environment=MOZ_ENABLE_WAYLAND=1
+
+[Install]
+WantedBy=graphical.target

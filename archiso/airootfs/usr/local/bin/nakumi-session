@@ -1,0 +1,35 @@
+#!/bin/bash
+# NakumiOS Session Startup Script
+
+# Set up environment
+export XDG_SESSION_TYPE=wayland
+export XDG_CURRENT_DESKTOP=NakumiOS
+export XDG_SESSION_DESKTOP=NakumiOS
+export QT_QPA_PLATFORM=wayland
+export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+export QT_QPA_PLATFORMTHEME=qt6ct
+export MOZ_ENABLE_WAYLAND=1
+
+# Create runtime directory if needed
+if [ -z "$XDG_RUNTIME_DIR" ]; then
+    export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+    mkdir -p "$XDG_RUNTIME_DIR"
+    chmod 0700 "$XDG_RUNTIME_DIR"
+fi
+
+# Start D-Bus session if not running
+if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
+    eval $(dbus-launch --sh-syntax)
+    export DBUS_SESSION_BUS_ADDRESS
+fi
+
+# Start PipeWire
+pipewire &
+pipewire-pulse &
+wireplumber &
+
+# Wait for audio to initialize
+sleep 1
+
+# Start the NakumiOS compositor
+exec /usr/bin/nakumi-compositor
