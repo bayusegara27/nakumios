@@ -1,0 +1,29 @@
+#!/bin/bash
+set -e
+
+# Create the nakumi user with a home directory
+if ! id -u nakumi >/dev/null 2>&1; then
+    useradd -m -s /bin/bash -G video,audio,input nakumi
+    # Create wheel group if it doesn't exist, then add user
+    groupadd -f wheel
+    usermod -aG wheel nakumi
+fi
+
+# Set empty password for live session auto-login
+passwd -d nakumi
+
+# Allow wheel group to use sudo without password (live session)
+echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel-nopasswd
+chmod 0440 /etc/sudoers.d/wheel-nopasswd
+
+# Ensure greetd is enabled
+systemctl enable greetd.service || true
+
+# Ensure pipewire user services are available
+mkdir -p /home/nakumi/.config/systemd/user/default.target.wants
+ln -sf /usr/lib/systemd/user/pipewire.service \
+    /home/nakumi/.config/systemd/user/default.target.wants/pipewire.service || true
+ln -sf /usr/lib/systemd/user/wireplumber.service \
+    /home/nakumi/.config/systemd/user/default.target.wants/wireplumber.service || true
+
+chown -R nakumi:nakumi /home/nakumi

@@ -1,0 +1,36 @@
+# Build artifacts
+*.o
+*.so
+*.a
+*.iso
+*.img
+build/
+_build/
+builddir/
+
+# Debian live-build
+live-build-config/.build/
+live-build-config/binary/
+live-build-config/cache/
+live-build-config/chroot/
+live-build-config/.stage/
+live-build-config/binary.contents
+live-build-config/build.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+docs/desktop-screenshot.png
+docs/sysinfo.txt
+
+# Generated files
+*.sha256
