@@ -112,10 +112,9 @@ void MountManager::refresh() {
 }
 
 void MountManager::onRefreshFinished(QDBusPendingCallWatcher *watcher) {
-    QDBusPendingReply<QDBusMessage> reply = *watcher;
+    QDBusPendingReply<> reply = *watcher;
     if (!reply.isError()) {
-        QDBusMessage msg = reply.reply();
-        parseRefreshReply(msg);
+        parseRefreshReply(watcher->reply());
     }
     watcher->deleteLater();
 }
