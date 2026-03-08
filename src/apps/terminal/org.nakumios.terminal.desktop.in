@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Terminal
+Comment=NakumiOS Terminal Emulator
+Exec=nakumi-terminal
+Icon=utilities-terminal
+Type=Application
+Categories=System;TerminalEmulator;
+Keywords=terminal;console;shell;command;
+StartupNotify=true

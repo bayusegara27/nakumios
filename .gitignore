@@ -1,0 +1,44 @@
+# Build artifacts
+build/
+output/
+*.o
+*.a
+*.so
+*.so.*
+moc_*
+ui_*
+qrc_*
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# IDE
+.vscode/
+.idea/
+*.pro.user
+*.qmlproject.user
+*.creator.user
+
+# Qt
+*.qmlc
+*.jsc
+
+# System
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+
+# Archiso work directories
+archiso/work/
+archiso-work/
+
+# Logs
+*.log
+
+# Temporary files
+/tmp/
+*.tmp
