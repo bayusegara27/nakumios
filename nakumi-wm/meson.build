@@ -12,6 +12,7 @@ project(
 
 cc = meson.get_compiler('c')
 add_project_arguments('-DWLR_USE_UNSTABLE', language: 'c')
+add_project_arguments('-Wno-unused-parameter', language: 'c')
 
 # Core dependencies
 wlroots = dependency('wlroots-0.18', version: '>= 0.18.0')
