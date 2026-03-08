@@ -29,7 +29,6 @@ live-build-config/build.log
 Thumbs.db
 
 # Test artifacts
-docs/desktop-screenshot.png
 docs/sysinfo.txt
 
 # Generated files

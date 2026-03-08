@@ -1,0 +1,122 @@
+#!/bin/bash
+# nakumi-screenshot - Automated desktop screenshot capture for NakumiOS
+#
+# This script waits for the Wayland compositor to become ready,
+# captures the desktop using grim, and saves the screenshot to
+# the 9p virtfs shared directory (mounted at /mnt/host) for
+# extraction by the host-side QEMU test runner.
+#
+# Usage:
+#   nakumi-screenshot              # Capture once, save to /mnt/host
+#   nakumi-screenshot --wait 30    # Wait N seconds for compositor
+
+set -e
+
+WAIT_SECS="${1:-30}"
+if [ "$1" = "--wait" ]; then
+    WAIT_SECS="${2:-30}"
+fi
+
+SCREENSHOT_DIR="/mnt/host"
+SCREENSHOT_FILE="${SCREENSHOT_DIR}/desktop-screenshot.png"
+SYSINFO_FILE="${SCREENSHOT_DIR}/sysinfo.txt"
+
+# === Mount the 9p virtfs share ===
+mount_9p() {
+    if ! mountpoint -q "$SCREENSHOT_DIR" 2>/dev/null; then
+        mkdir -p "$SCREENSHOT_DIR"
+        mount -t 9p -o trans=virtio,version=9p2000.L host0 "$SCREENSHOT_DIR" 2>/dev/null || {
+            echo "[nakumi-screenshot] WARNING: 9p mount failed, saving locally to /tmp"
+            SCREENSHOT_DIR="/tmp"
+            SCREENSHOT_FILE="${SCREENSHOT_DIR}/desktop-screenshot.png"
+            SYSINFO_FILE="${SCREENSHOT_DIR}/sysinfo.txt"
+        }
+    fi
+}
+
+# === Wait for Wayland compositor ===
+wait_for_compositor() {
+    echo "[nakumi-screenshot] Waiting up to ${WAIT_SECS}s for Wayland compositor..."
+    local elapsed=0
+    while [ $elapsed -lt "$WAIT_SECS" ]; do
+        if [ -n "$WAYLAND_DISPLAY" ] || [ -S "${XDG_RUNTIME_DIR}/wayland-0" ] || \
+           [ -S "${XDG_RUNTIME_DIR}/wayland-1" ]; then
+            echo "[nakumi-screenshot] Compositor detected after ${elapsed}s."
+            return 0
+        fi
+        # Also check by looking for the nakumi-wm process
+        if pgrep -x nakumi-wm >/dev/null 2>&1; then
+            # Give the compositor an extra 3 seconds to stabilize
+            sleep 3
+            echo "[nakumi-screenshot] Compositor process found after ${elapsed}s."
+            return 0
+        fi
+        sleep 1
+        elapsed=$((elapsed + 1))
+    done
+    echo "[nakumi-screenshot] WARNING: Compositor not detected after ${WAIT_SECS}s."
+    return 1
+}
+
+# === Capture screenshot ===
+capture_screenshot() {
+    # Find the Wayland socket
+    if [ -z "$WAYLAND_DISPLAY" ]; then
+        for sock in "${XDG_RUNTIME_DIR}/wayland-0" "${XDG_RUNTIME_DIR}/wayland-1" \
+                    "/run/user/1000/wayland-0" "/run/user/0/wayland-0"; do
+            if [ -S "$sock" ]; then
+                export WAYLAND_DISPLAY="$(basename "$sock")"
+                export XDG_RUNTIME_DIR="$(dirname "$sock")"
+                break
+            fi
+        done
+    fi
+
+    if [ -z "$WAYLAND_DISPLAY" ]; then
+        echo "[nakumi-screenshot] ERROR: No Wayland display found."
+        return 1
+    fi
+
+    echo "[nakumi-screenshot] Capturing screenshot via grim..."
+    if command -v grim >/dev/null 2>&1; then
+        grim "$SCREENSHOT_FILE"
+        echo "[nakumi-screenshot] Screenshot saved to: $SCREENSHOT_FILE"
+        return 0
+    else
+        echo "[nakumi-screenshot] ERROR: grim not found. Install grim package."
+        return 1
+    fi
+}
+
+# === Collect system info ===
+collect_sysinfo() {
+    {
+        echo "=== NakumiOS System Info ==="
+        echo "Date: $(date -u)"
+        echo "Kernel: $(uname -r)"
+        echo "Architecture: $(uname -m)"
+        echo ""
+        echo "=== Compositor ==="
+        echo "WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-not set}"
+        echo "WLR_RENDERER=${WLR_RENDERER:-auto}"
+        echo "LIBGL_ALWAYS_SOFTWARE=${LIBGL_ALWAYS_SOFTWARE:-not set}"
+        echo ""
+        echo "=== GPU ==="
+        ls -la /dev/dri/ 2>/dev/null || echo "No DRI devices"
+        echo ""
+        echo "=== Memory ==="
+        free -h 2>/dev/null || true
+        echo ""
+        echo "=== Running Processes ==="
+        ps aux 2>/dev/null | grep -E '(nakumi|wayland|pipewire)' || true
+    } > "$SYSINFO_FILE" 2>&1
+    echo "[nakumi-screenshot] System info saved to: $SYSINFO_FILE"
+}
+
+# === Main ===
+echo "[nakumi-screenshot] NakumiOS Screenshot Capture"
+mount_9p
+wait_for_compositor || true
+collect_sysinfo
+capture_screenshot
+echo "[nakumi-screenshot] Done."

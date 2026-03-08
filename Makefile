@@ -145,7 +145,14 @@ test-automation:
 		exit 1; \
 	fi
 	mkdir -p docs
-	qemu-system-x86_64 \
+	@echo "==> Booting NakumiOS headlessly in QEMU with 9p virtfs for screenshot extraction..."
+	@echo "    The guest will:"
+	@echo "    1. Boot the live ISO"
+	@echo "    2. Start the Wayland compositor (nakumi-wm)"
+	@echo "    3. Launch nakumi-screenshot.service (systemd oneshot)"
+	@echo "    4. Capture the desktop via grim"
+	@echo "    5. Save to the 9p-shared docs/ directory"
+	timeout 180 qemu-system-x86_64 \
 		-enable-kvm \
 		-m $(QEMU_MEM) \
 		-smp $(QEMU_CPUS) \
@@ -160,8 +167,20 @@ test-automation:
 		-device intel-hda \
 		-device hda-duplex \
 		-usb \
-		-device usb-tablet
-	@echo "==> Automated tests complete. Check docs/ for screenshots."
+		-device usb-tablet \
+	|| true
+	@echo "==> QEMU session ended."
+	@if [ -f "docs/desktop-screenshot.png" ]; then \
+		echo "==> SUCCESS: Desktop screenshot captured at docs/desktop-screenshot.png"; \
+		ls -la docs/desktop-screenshot.png; \
+	else \
+		echo "==> WARNING: No screenshot captured. Check guest logs."; \
+	fi
+	@if [ -f "docs/sysinfo.txt" ]; then \
+		echo "==> System info collected:"; \
+		cat docs/sysinfo.txt; \
+	fi
+	@echo "==> Automated tests complete."
 
 # ==============================================================================
 # Unit Tests

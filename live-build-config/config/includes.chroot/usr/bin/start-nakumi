@@ -72,4 +72,6 @@ if command -v pipewire >/dev/null 2>&1; then
 fi
 
 # === Launch the Compositor ===
-exec nakumi-wm
+# The -s flag starts a startup command after the Wayland socket is ready.
+# This launches the panel and launcher inside the compositor session.
+exec nakumi-wm -s "nakumi-panel & nakumi-launcher"
