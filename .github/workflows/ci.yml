@@ -61,7 +61,7 @@ jobs:
         run: |
           git clone --depth 1 --branch 0.18.0 https://gitlab.freedesktop.org/wlroots/wlroots.git /tmp/wlroots
           cd /tmp/wlroots
-          meson setup build --prefix=/usr -Dexamples=false
+          meson setup build --prefix=/usr -Dexamples=false -Dwerror=false
           ninja -C build
           ninja -C build install
           ldconfig
