@@ -132,6 +132,35 @@ add_custom_command(
     COMMENT "Generating layer-shell wayland protocol code"
 )
 
+# ---- xdg-shell protocol (dependency of wlr-layer-shell) ---------------------
+# The wlr-layer-shell protocol references xdg_popup, so we must also generate
+# and compile the xdg-shell protocol code to provide the xdg_popup_interface
+# symbol at link time.
+pkg_get_variable(WAYLAND_PROTOCOLS_DIR wayland-protocols pkgdatadir)
+if(NOT WAYLAND_PROTOCOLS_DIR)
+    message(FATAL_ERROR "Could not find wayland-protocols pkgdatadir. Is wayland-protocols installed?")
+endif()
+set(XDG_SHELL_XML "${WAYLAND_PROTOCOLS_DIR}/stable/xdg-shell/xdg-shell.xml")
+
+set(XDG_SHELL_PROTOCOL_HEADER
+    "${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-client-protocol.h")
+set(XDG_SHELL_PROTOCOL_SOURCE
+    "${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-protocol.c")
+
+add_custom_command(
+    OUTPUT ${XDG_SHELL_PROTOCOL_HEADER}
+    COMMAND ${WAYLAND_SCANNER} client-header ${XDG_SHELL_XML} ${XDG_SHELL_PROTOCOL_HEADER}
+    DEPENDS ${XDG_SHELL_XML}
+    COMMENT "Generating xdg-shell wayland client protocol header"
+)
+
+add_custom_command(
+    OUTPUT ${XDG_SHELL_PROTOCOL_SOURCE}
+    COMMAND ${WAYLAND_SCANNER} private-code ${XDG_SHELL_XML} ${XDG_SHELL_PROTOCOL_SOURCE}
+    DEPENDS ${XDG_SHELL_XML}
+    COMMENT "Generating xdg-shell wayland protocol code"
+)
+
 # ============================================================================
 # Panel executable
 # ============================================================================
@@ -150,6 +179,8 @@ add_executable(nakumi-panel
     ${LAYER_SHELL_CLIENT_SOURCE}
     ${LAYER_SHELL_PROTOCOL_HEADER}
     ${LAYER_SHELL_PROTOCOL_SOURCE}
+    ${XDG_SHELL_PROTOCOL_HEADER}
+    ${XDG_SHELL_PROTOCOL_SOURCE}
     qml.qrc
 )
 
