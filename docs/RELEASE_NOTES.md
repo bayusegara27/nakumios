@@ -10,6 +10,7 @@
 - PipeWire audio with WirePlumber
 - Automatic software rendering fallback for VMs
 - Auto-login via greetd
+- Automated screenshot pipeline via grim + 9p virtfs
 
 ### System Requirements
 

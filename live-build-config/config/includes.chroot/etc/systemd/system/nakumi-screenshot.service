@@ -6,7 +6,7 @@ Wants=graphical.target
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/nakumi-screenshot --wait 45
-User=root
+User=nakumi
 Environment=XDG_RUNTIME_DIR=/run/user/1000
 StandardOutput=journal
 StandardError=journal
