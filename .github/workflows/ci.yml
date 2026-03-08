@@ -56,7 +56,8 @@ jobs:
             qml6-module-qtquick-controls \
             qml6-module-qtquick-layouts \
             libqt6dbus6 \
-            qt6-base-private-dev
+            qt6-base-private-dev \
+            qt6-wayland-private-dev
 
       - name: Build and install wlroots from source
         run: |
