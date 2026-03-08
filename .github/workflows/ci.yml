@@ -36,11 +36,17 @@ jobs:
             pkg-config \
             git \
             ca-certificates \
-            libwlroots-dev \
             wayland-protocols \
             libwayland-dev \
             libxkbcommon-dev \
             libpixman-1-dev \
+            libdrm-dev \
+            libgbm-dev \
+            libseat-dev \
+            libudev-dev \
+            libinput-dev \
+            libegl-dev \
+            libgles-dev \
             qt6-base-dev \
             qt6-declarative-dev \
             qt6-wayland \
@@ -50,6 +56,15 @@ jobs:
             qml6-module-qtquick-layouts \
             libqt6dbus6 \
             qt6-base-private-dev
+
+      - name: Build and install wlroots from source
+        run: |
+          git clone --depth 1 --branch 0.18.0 https://gitlab.freedesktop.org/wlroots/wlroots.git /tmp/wlroots
+          cd /tmp/wlroots
+          meson setup build --prefix=/usr -Dexamples=false
+          ninja -C build
+          ninja -C build install
+          ldconfig
 
       - name: Checkout repository
         uses: actions/checkout@v4

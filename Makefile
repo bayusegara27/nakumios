@@ -25,6 +25,7 @@ ISO_NAME     := nakumios-1.0-amd64
 ISO_FILE     := live-build-config/$(ISO_NAME).iso
 CHROOT_BIN   := live-build-config/config/includes.chroot/usr/bin
 CHROOT_APPS  := live-build-config/config/includes.chroot/usr/share/applications
+CHROOT_LIB   := live-build-config/config/includes.chroot/usr/lib
 QEMU_MEM     := 2048
 QEMU_CPUS    := 2
 VERSION      := 1.0.0
@@ -90,6 +91,12 @@ install-chroot: build-all
 	mkdir -p $(CHROOT_APPS)
 	# Compositor
 	cp nakumi-wm/builddir/nakumi-wm $(CHROOT_BIN)/
+	# Copy wlroots shared library (built from source, needed at runtime)
+	mkdir -p $(CHROOT_LIB)
+	@echo "==> Copying wlroots shared library to chroot..."
+	cp -a /usr/lib/*/libwlroots-0.18.so* $(CHROOT_LIB)/ 2>/dev/null || \
+		cp -a /usr/lib/libwlroots-0.18.so* $(CHROOT_LIB)/ 2>/dev/null || \
+		echo "WARNING: wlroots shared library not found — nakumi-wm may fail at runtime"
 	# Desktop Environment
 	cp nakumi-de/panel/build/nakumi-panel $(CHROOT_BIN)/
 	cp nakumi-de/launcher/build/nakumi-launcher $(CHROOT_BIN)/
