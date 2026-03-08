@@ -28,7 +28,15 @@ pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
 # CRITICAL: Standard Qt6 does NOT have native layer-shell QML bindings.
 # We must generate C++ headers from the protocol XML using qtwaylandscanner.
 
-find_program(QT_WAYLAND_SCANNER NAMES qtwaylandscanner qt6-qtwaylandscanner REQUIRED)
+# qtwaylandscanner lives in Qt6's libexec directory, which is not in PATH
+# on most distributions. Add common install paths as hints.
+find_program(QT_WAYLAND_SCANNER
+    NAMES qtwaylandscanner qt6-qtwaylandscanner
+    HINTS
+        /usr/lib/qt6/libexec
+        /usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}/qt6/libexec
+    REQUIRED
+)
 
 set(LAYER_SHELL_XML
     "${CMAKE_SOURCE_DIR}/../../nakumi-wm/protocols/wlr-layer-shell-unstable-v1.xml")
