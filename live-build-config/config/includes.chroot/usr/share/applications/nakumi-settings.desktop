@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=NakumiSettings
+Comment=NakumiOS System Settings
+Exec=nakumi-settings
+Icon=preferences-system
+Type=Application
+Categories=Settings;System;
+Keywords=settings;preferences;configuration;wifi;audio;appearance;

@@ -1,0 +1,30 @@
+// NakumiOS polkit rules
+// Allow the 'nakumi' user to manage network, mount USB, and power off
+// without sudo prompts in the live session.
+
+polkit.addRule(function(action, subject) {
+    if (subject.user === "nakumi") {
+        // NetworkManager: Allow managing network connections
+        if (action.id.indexOf("org.freedesktop.NetworkManager") === 0) {
+            return polkit.Result.YES;
+        }
+
+        // UDisks2: Allow mounting/unmounting USB drives
+        if (action.id.indexOf("org.freedesktop.udisks2.filesystem-mount") === 0 ||
+            action.id.indexOf("org.freedesktop.udisks2.filesystem-unmount") === 0 ||
+            action.id.indexOf("org.freedesktop.udisks2.eject-media") === 0 ||
+            action.id.indexOf("org.freedesktop.udisks2.power-off-drive") === 0) {
+            return polkit.Result.YES;
+        }
+
+        // Power management: Allow shutdown, reboot, suspend
+        if (action.id === "org.freedesktop.login1.power-off" ||
+            action.id === "org.freedesktop.login1.power-off-multiple-sessions" ||
+            action.id === "org.freedesktop.login1.reboot" ||
+            action.id === "org.freedesktop.login1.reboot-multiple-sessions" ||
+            action.id === "org.freedesktop.login1.suspend" ||
+            action.id === "org.freedesktop.login1.hibernate") {
+            return polkit.Result.YES;
+        }
+    }
+});

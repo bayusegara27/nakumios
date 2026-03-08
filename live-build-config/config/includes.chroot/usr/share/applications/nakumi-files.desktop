@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=NakumiFiles
+Comment=NakumiOS File Manager
+Exec=nakumi-files
+Icon=system-file-manager
+Type=Application
+Categories=System;FileManager;
+Keywords=files;folders;directory;browse;

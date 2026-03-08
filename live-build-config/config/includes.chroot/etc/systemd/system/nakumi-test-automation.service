@@ -1,0 +1,16 @@
+[Unit]
+Description=NakumiOS Automated UI Test - Screenshot and System Info
+After=graphical.target greetd.service
+Wants=graphical.target
+
+[Service]
+Type=oneshot
+User=nakumi
+ExecStartPre=/bin/sleep 15
+ExecStart=/usr/bin/nakumi-test-automation
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

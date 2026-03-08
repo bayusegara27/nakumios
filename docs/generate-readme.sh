@@ -1,3 +1,25 @@
+#!/bin/bash
+# generate-readme.sh - Generates README.md with build instructions,
+# architecture details, and desktop screenshot.
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+OUTPUT="${PROJECT_DIR}/docs/RELEASE_NOTES.md"
+README="${PROJECT_DIR}/README.md"
+
+# Check for screenshot
+SCREENSHOT_LINE=""
+if [ -f "${PROJECT_DIR}/docs/desktop-screenshot.png" ]; then
+    SCREENSHOT_LINE="
+## Desktop Screenshot
+
+![NakumiOS Desktop](docs/desktop-screenshot.png)
+"
+fi
+
+cat > "${README}" << 'READMEEOF'
 # NakumiOS v1.0
 
 A modern, lightweight Linux desktop operating system built on Debian Testing (Trixie).
@@ -11,6 +33,13 @@ A modern, lightweight Linux desktop operating system built on Debian Testing (Tr
 - **VM Compatible** - Automatic software rendering fallback for VirtualBox/VMware/QEMU
 - **PipeWire Audio** - Modern audio stack with WirePlumber session management
 - **Auto-login** - Boots directly to desktop via greetd
+READMEEOF
+
+if [ -n "$SCREENSHOT_LINE" ]; then
+    echo "$SCREENSHOT_LINE" >> "${README}"
+fi
+
+cat >> "${README}" << 'READMEEOF'
 
 ## Architecture
 
@@ -93,3 +122,35 @@ make publish
 ## License
 
 MIT License - See LICENSE for details.
+READMEEOF
+
+echo "README.md generated."
+
+# Also generate release notes
+cat > "${OUTPUT}" << 'RELEASEEOF'
+## NakumiOS v1.0.0 Release
+
+### What's New
+
+- Initial release of NakumiOS
+- Custom wlroots-based Wayland compositor with wlr_scene API
+- Qt6 Desktop Environment with layer-shell panel and application launcher
+- Core applications: Terminal, File Manager, Text Editor, Settings
+- Debian Testing (Trixie) base with live-build
+- PipeWire audio with WirePlumber
+- Automatic software rendering fallback for VMs
+- Auto-login via greetd
+
+### System Requirements
+
+- x86_64 processor
+- 2 GB RAM minimum (4 GB recommended)
+- 4 GB disk space
+- GPU with DRM/KMS support (or runs in software rendering mode)
+
+### Checksums
+
+See the accompanying `.sha256` file for ISO integrity verification.
+RELEASEEOF
+
+echo "RELEASE_NOTES.md generated."

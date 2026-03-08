@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=NakumiTerm
+Comment=NakumiOS Terminal Emulator
+Exec=nakumi-term
+Icon=utilities-terminal
+Type=Application
+Categories=System;TerminalEmulator;
+Keywords=terminal;console;shell;bash;
