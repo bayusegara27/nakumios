@@ -64,10 +64,13 @@ add_custom_command(
 )
 
 # Generate wayland-scanner protocol code (low-level C bindings)
+# NOTE: qtwaylandscanner-generated headers expect the wayland- prefix in the
+# include filename (wayland-<protocol>-client-protocol.h), so we must use
+# matching output names here.
 set(LAYER_SHELL_PROTOCOL_HEADER
-    "${CMAKE_CURRENT_BINARY_DIR}/wlr-layer-shell-unstable-v1-client-protocol.h")
+    "${CMAKE_CURRENT_BINARY_DIR}/wayland-wlr-layer-shell-unstable-v1-client-protocol.h")
 set(LAYER_SHELL_PROTOCOL_SOURCE
-    "${CMAKE_CURRENT_BINARY_DIR}/wlr-layer-shell-unstable-v1-protocol.c")
+    "${CMAKE_CURRENT_BINARY_DIR}/wayland-wlr-layer-shell-unstable-v1-protocol.c")
 
 add_custom_command(
     OUTPUT ${LAYER_SHELL_PROTOCOL_HEADER}

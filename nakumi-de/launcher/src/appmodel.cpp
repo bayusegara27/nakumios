@@ -4,8 +4,11 @@
 
 #include "appmodel.h"
 
+#include <algorithm>
+
 #include <QDir>
 #include <QProcess>
+#include <QRegularExpression>
 #include <QSettings>
 #include <QStandardPaths>
 

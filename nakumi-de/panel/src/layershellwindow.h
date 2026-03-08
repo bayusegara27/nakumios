@@ -17,7 +17,7 @@
 #include <wayland-client.h>
 
 #include "qwayland-wlr-layer-shell-unstable-v1.h"
-#include "wlr-layer-shell-unstable-v1-client-protocol.h"
+#include "wayland-wlr-layer-shell-unstable-v1-client-protocol.h"
 
 /* ======================================================================
  * LayerShellV1 - Global registry object for zwlr_layer_shell_v1
