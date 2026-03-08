@@ -7,7 +7,7 @@ set(CMAKE_AUTOMOC ON)
 
 enable_testing()
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Test)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Test)
 
 # ==============================================================================
 # ANSI Parser Tests (NakumiTerm)
@@ -47,6 +47,7 @@ target_include_directories(test_filemanager PRIVATE
 target_link_libraries(test_filemanager PRIVATE
     Qt6::Core
     Qt6::Gui
+    Qt6::Qml
     Qt6::Test
 )
 
