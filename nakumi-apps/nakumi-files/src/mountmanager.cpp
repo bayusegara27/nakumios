@@ -1,12 +1,15 @@
 /*
  * MountManager implementation - UDisks2 D-Bus integration
+ *
+ * All D-Bus calls use QDBusPendingCallWatcher for async execution
+ * to avoid blocking the Qt main/GUI thread.
  */
 
 #include "mountmanager.h"
 
 #include <QDBusArgument>
 #include <QDBusMessage>
-#include <QDBusReply>
+#include <QDBusPendingReply>
 
 static const auto UDISKS2_SERVICE = QStringLiteral("org.freedesktop.UDisks2");
 static const auto UDISKS2_PATH = QStringLiteral("/org/freedesktop/UDisks2");
@@ -42,54 +45,87 @@ QStringList MountManager::mountedDevices() const {
 }
 
 void MountManager::mount(const QString &devicePath) {
-    QDBusInterface iface(UDISKS2_SERVICE, devicePath, UDISKS2_FS,
-                         QDBusConnection::systemBus());
-    if (!iface.isValid()) {
-        emit errorOccurred(QStringLiteral("Invalid device: ") + devicePath);
-        return;
-    }
+    QDBusMessage msg = QDBusMessage::createMethodCall(
+        UDISKS2_SERVICE, devicePath, UDISKS2_FS, QStringLiteral("Mount"));
 
+    /* Construct the a{sv} options argument */
     QVariantMap options;
-    QDBusReply<QString> reply = iface.call(QStringLiteral("Mount"), options);
-    if (reply.isValid()) {
+    msg << QVariant::fromValue(options);
+
+    QDBusPendingCall pending =
+        QDBusConnection::systemBus().asyncCall(msg);
+    auto *watcher = new QDBusPendingCallWatcher(pending, this);
+    connect(watcher, &QDBusPendingCallWatcher::finished,
+            this, &MountManager::onMountFinished);
+}
+
+void MountManager::onMountFinished(QDBusPendingCallWatcher *watcher) {
+    QDBusPendingReply<QString> reply = *watcher;
+    if (reply.isError()) {
+        emit errorOccurred(QStringLiteral("Mount failed: ") +
+                           reply.error().message());
+    } else {
         emit mounted(reply.value());
         refresh();
-    } else {
-        emit errorOccurred(QStringLiteral("Mount failed: ") + reply.error().message());
     }
+    watcher->deleteLater();
 }
 
 void MountManager::unmount(const QString &devicePath) {
-    QDBusInterface iface(UDISKS2_SERVICE, devicePath, UDISKS2_FS,
-                         QDBusConnection::systemBus());
-    if (!iface.isValid()) {
-        emit errorOccurred(QStringLiteral("Invalid device: ") + devicePath);
-        return;
-    }
+    QDBusMessage msg = QDBusMessage::createMethodCall(
+        UDISKS2_SERVICE, devicePath, UDISKS2_FS, QStringLiteral("Unmount"));
 
+    /* Construct the a{sv} options argument */
     QVariantMap options;
-    QDBusReply<void> reply = iface.call(QStringLiteral("Unmount"), options);
-    if (reply.isValid()) {
-        emit unmounted(devicePath);
-        refresh();
+    msg << QVariant::fromValue(options);
+
+    QDBusPendingCall pending =
+        QDBusConnection::systemBus().asyncCall(msg);
+    auto *watcher = new QDBusPendingCallWatcher(pending, this);
+    watcher->setProperty("devicePath", devicePath);
+    connect(watcher, &QDBusPendingCallWatcher::finished,
+            this, &MountManager::onUnmountFinished);
+}
+
+void MountManager::onUnmountFinished(QDBusPendingCallWatcher *watcher) {
+    QDBusPendingReply<> reply = *watcher;
+    if (reply.isError()) {
+        emit errorOccurred(QStringLiteral("Unmount failed: ") +
+                           reply.error().message());
     } else {
-        emit errorOccurred(QStringLiteral("Unmount failed: ") + reply.error().message());
+        emit unmounted(watcher->property("devicePath").toString());
+        refresh();
     }
+    watcher->deleteLater();
 }
 
 void MountManager::refresh() {
-    m_devices.clear();
+    QDBusMessage msg = QDBusMessage::createMethodCall(
+        UDISKS2_SERVICE, UDISKS2_PATH, DBUS_OBJMGR,
+        QStringLiteral("GetManagedObjects"));
 
-    QDBusInterface objMgr(UDISKS2_SERVICE, UDISKS2_PATH, DBUS_OBJMGR,
-                          QDBusConnection::systemBus());
-    if (!objMgr.isValid()) {
-        return;
+    QDBusPendingCall pending =
+        QDBusConnection::systemBus().asyncCall(msg);
+    auto *watcher = new QDBusPendingCallWatcher(pending, this);
+    connect(watcher, &QDBusPendingCallWatcher::finished,
+            this, &MountManager::onRefreshFinished);
+}
+
+void MountManager::onRefreshFinished(QDBusPendingCallWatcher *watcher) {
+    QDBusPendingReply<QDBusMessage> reply = *watcher;
+    if (!reply.isError()) {
+        QDBusMessage msg = reply.reply();
+        parseRefreshReply(msg);
     }
+    watcher->deleteLater();
+}
 
-    QDBusMessage reply = objMgr.call(QStringLiteral("GetManagedObjects"));
+void MountManager::parseRefreshReply(const QDBusMessage &reply) {
     if (reply.type() != QDBusMessage::ReplyMessage || reply.arguments().isEmpty()) {
         return;
     }
+
+    m_devices.clear();
 
     /* Parse managed objects for filesystems */
     const QDBusArgument arg = reply.arguments().first().value<QDBusArgument>();

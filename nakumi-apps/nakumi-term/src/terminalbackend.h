@@ -13,6 +13,8 @@
 #include <QQmlEngine>
 #include <QStringList>
 
+#include <atomic>
+
 #include "ansiparser.h"
 
 class PtyReader : public QObject {
@@ -31,7 +33,7 @@ signals:
 
 private:
     int m_fd;
-    bool m_running = false;
+    std::atomic<bool> m_running{false};
 };
 
 class TerminalBackend : public QObject {

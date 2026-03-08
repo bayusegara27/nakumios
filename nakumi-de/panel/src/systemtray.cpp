@@ -1,11 +1,15 @@
 /*
  * SystemTray implementation
+ *
+ * Uses async QProcess (signal-based) to avoid blocking the GUI thread
+ * during volume/network status refreshes.
  */
 
 #include "systemtray.h"
 
 SystemTray::SystemTray(QObject *parent)
     : QObject(parent) {
+    /* Non-blocking initial refresh via async QProcess */
     refreshVolume();
     refreshNetwork();
 }
@@ -24,12 +28,23 @@ void SystemTray::setVolume(int vol) {
 }
 
 void SystemTray::refreshNetwork() {
-    QProcess proc;
-    proc.start(QStringLiteral("nmcli"), QStringList{
+    auto *proc = new QProcess(this);
+    connect(proc, &QProcess::finished,
+            this, &SystemTray::onNetworkProcessFinished);
+    connect(proc, &QProcess::finished,
+            proc, &QObject::deleteLater);
+    proc->start(QStringLiteral("nmcli"), QStringList{
         QStringLiteral("-t"), QStringLiteral("-f"),
         QStringLiteral("ACTIVE,SSID"), QStringLiteral("dev"), QStringLiteral("wifi")});
-    proc.waitForFinished(3000);
-    QString output = QString::fromUtf8(proc.readAllStandardOutput()).trimmed();
+}
+
+void SystemTray::onNetworkProcessFinished(int exitCode, QProcess::ExitStatus status) {
+    Q_UNUSED(exitCode)
+    Q_UNUSED(status)
+    auto *proc = qobject_cast<QProcess *>(sender());
+    if (!proc) return;
+
+    QString output = QString::fromUtf8(proc->readAllStandardOutput()).trimmed();
 
     m_networkConnected = false;
     m_networkName.clear();
@@ -46,12 +61,23 @@ void SystemTray::refreshNetwork() {
 }
 
 void SystemTray::refreshVolume() {
-    QProcess proc;
-    proc.start(QStringLiteral("wpctl"),
-               QStringList{QStringLiteral("get-volume"),
-                           QStringLiteral("@DEFAULT_AUDIO_SINK@")});
-    proc.waitForFinished(3000);
-    QString output = QString::fromUtf8(proc.readAllStandardOutput()).trimmed();
+    auto *proc = new QProcess(this);
+    connect(proc, &QProcess::finished,
+            this, &SystemTray::onVolumeProcessFinished);
+    connect(proc, &QProcess::finished,
+            proc, &QObject::deleteLater);
+    proc->start(QStringLiteral("wpctl"),
+                QStringList{QStringLiteral("get-volume"),
+                            QStringLiteral("@DEFAULT_AUDIO_SINK@")});
+}
+
+void SystemTray::onVolumeProcessFinished(int exitCode, QProcess::ExitStatus status) {
+    Q_UNUSED(exitCode)
+    Q_UNUSED(status)
+    auto *proc = qobject_cast<QProcess *>(sender());
+    if (!proc) return;
+
+    QString output = QString::fromUtf8(proc->readAllStandardOutput()).trimmed();
     /* Output format: "Volume: 0.50" */
     if (output.contains(QLatin1String("Volume:"))) {
         QString volStr = output.split(QLatin1Char(':')).last().trimmed();

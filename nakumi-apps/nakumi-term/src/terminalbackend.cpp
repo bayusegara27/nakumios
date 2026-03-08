@@ -25,10 +25,10 @@ PtyReader::PtyReader(int fd, QObject *parent)
 }
 
 void PtyReader::start() {
-    m_running = true;
+    m_running.store(true, std::memory_order_relaxed);
     char buf[4096];
 
-    while (m_running) {
+    while (m_running.load(std::memory_order_relaxed)) {
         struct pollfd pfd;
         pfd.fd = m_fd;
         pfd.events = POLLIN;
@@ -50,7 +50,7 @@ void PtyReader::start() {
 }
 
 void PtyReader::stop() {
-    m_running = false;
+    m_running.store(false, std::memory_order_relaxed);
 }
 
 /* ======================================================================

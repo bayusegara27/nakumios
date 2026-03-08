@@ -2,6 +2,8 @@
  * PanelController - QML-accessible controller for the NakumiOS panel
  *
  * Provides clock, date, and session management to QML.
+ * Uses org.freedesktop.login1.Manager D-Bus interface for
+ * shutdown/reboot to avoid spawning subprocesses.
  */
 
 #ifndef PANELCONTROLLER_H
@@ -11,6 +13,8 @@
 #include <QTimer>
 #include <QDateTime>
 #include <QProcess>
+#include <QDBusInterface>
+#include <QDBusConnection>
 #include <QQmlEngine>
 
 class PanelController : public QObject {

@@ -8,6 +8,7 @@
 #include <QObject>
 #include <QDBusConnection>
 #include <QDBusInterface>
+#include <QDBusPendingCallWatcher>
 #include <QQmlEngine>
 
 struct MountPoint {
@@ -43,9 +44,13 @@ signals:
 private slots:
     void onInterfacesAdded(const QDBusMessage &message);
     void onInterfacesRemoved(const QDBusMessage &message);
+    void onMountFinished(QDBusPendingCallWatcher *watcher);
+    void onUnmountFinished(QDBusPendingCallWatcher *watcher);
+    void onRefreshFinished(QDBusPendingCallWatcher *watcher);
 
 private:
     void connectToUDisks();
+    void parseRefreshReply(const QDBusMessage &reply);
     QVector<MountPoint> m_devices;
 };
 

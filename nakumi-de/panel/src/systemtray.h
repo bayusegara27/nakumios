@@ -1,5 +1,8 @@
 /*
  * SystemTray - Clock and system status for the panel
+ *
+ * Audio and network status are refreshed asynchronously using
+ * QProcess signals to avoid blocking the main/GUI thread.
  */
 
 #ifndef SYSTEMTRAY_H
@@ -31,6 +34,10 @@ public:
 signals:
     void volumeChanged();
     void networkChanged();
+
+private slots:
+    void onVolumeProcessFinished(int exitCode, QProcess::ExitStatus status);
+    void onNetworkProcessFinished(int exitCode, QProcess::ExitStatus status);
 
 private:
     int m_volume = 50;

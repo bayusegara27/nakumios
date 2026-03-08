@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
+include(FindPkgConfig)
+
 # Find Qt6 packages
 find_package(Qt6 REQUIRED COMPONENTS
     Core
@@ -79,9 +81,6 @@ add_custom_command(
 # Panel executable
 # ============================================================================
 
-include(FindPkgConfig)
-pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
-
 add_executable(nakumi-panel
     src/main.cpp
     src/layershellwindow.cpp
@@ -111,6 +110,7 @@ target_link_libraries(nakumi-panel PRIVATE
     Qt6::Qml
     Qt6::Quick
     Qt6::WaylandClient
+    Qt6::WaylandClientPrivate
     Qt6::DBus
     ${WAYLAND_CLIENT_LIBRARIES}
 )

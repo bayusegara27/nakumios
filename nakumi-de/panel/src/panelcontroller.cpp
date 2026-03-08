@@ -1,5 +1,9 @@
 /*
  * PanelController implementation
+ *
+ * Uses org.freedesktop.login1.Manager D-Bus interface for
+ * system power management (shutdown, reboot) instead of spawning
+ * systemctl subprocesses.
  */
 
 #include "panelcontroller.h"
@@ -29,18 +33,41 @@ void PanelController::toggleLauncher() {
 }
 
 void PanelController::logout() {
-    /* Terminate the compositor gracefully */
-    QProcess::startDetached(QStringLiteral("loginctl"),
-                            QStringList{QStringLiteral("terminate-session"),
-                                        QStringLiteral("self")});
+    /* Terminate the compositor session via logind D-Bus */
+    QDBusInterface logind(
+        QStringLiteral("org.freedesktop.login1"),
+        QStringLiteral("/org/freedesktop/login1"),
+        QStringLiteral("org.freedesktop.login1.Manager"),
+        QDBusConnection::systemBus());
+
+    if (logind.isValid()) {
+        logind.asyncCall(QStringLiteral("TerminateSession"),
+                         QStringLiteral("self"));
+    }
 }
 
 void PanelController::shutdown() {
-    QProcess::startDetached(QStringLiteral("systemctl"),
-                            QStringList{QStringLiteral("poweroff")});
+    /* Power off via org.freedesktop.login1.Manager.PowerOff(interactive) */
+    QDBusInterface logind(
+        QStringLiteral("org.freedesktop.login1"),
+        QStringLiteral("/org/freedesktop/login1"),
+        QStringLiteral("org.freedesktop.login1.Manager"),
+        QDBusConnection::systemBus());
+
+    if (logind.isValid()) {
+        logind.asyncCall(QStringLiteral("PowerOff"), true);
+    }
 }
 
 void PanelController::reboot() {
-    QProcess::startDetached(QStringLiteral("systemctl"),
-                            QStringList{QStringLiteral("reboot")});
+    /* Reboot via org.freedesktop.login1.Manager.Reboot(interactive) */
+    QDBusInterface logind(
+        QStringLiteral("org.freedesktop.login1"),
+        QStringLiteral("/org/freedesktop/login1"),
+        QStringLiteral("org.freedesktop.login1.Manager"),
+        QDBusConnection::systemBus());
+
+    if (logind.isValid()) {
+        logind.asyncCall(QStringLiteral("Reboot"), true);
+    }
 }
