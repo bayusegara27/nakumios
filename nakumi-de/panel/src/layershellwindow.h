@@ -14,7 +14,6 @@
 #include <QObject>
 #include <QQuickWindow>
 #include <QWaylandClientExtension>
-#include <QtWaylandClient/QWaylandWindow>
 #include <wayland-client.h>
 
 #include "qwayland-wlr-layer-shell-unstable-v1.h"
