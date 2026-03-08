@@ -10,12 +10,17 @@ on:
 env:
   ISO_NAME: nakumios-1.0-amd64
 
+permissions:
+  contents: read
+
 jobs:
   # ==============================================================================
   # Job 1: Build all components and run unit tests
   # ==============================================================================
   build-and-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     container:
       image: debian:testing
 
@@ -92,6 +97,8 @@ jobs:
   # ==============================================================================
   build-iso:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: build-and-test
     if: startsWith(github.ref, 'refs/tags/v')
 
