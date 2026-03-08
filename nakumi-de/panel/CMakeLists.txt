@@ -45,6 +45,20 @@ set(LAYER_SHELL_XML
 # IMPORTANT: The protocol XML uses "namespace" as a parameter name, which is a
 # C++ reserved keyword.  We pipe every generated file through sed to rename
 # the identifier to "name_space" so the code compiles as valid C++.
+#
+# NOTE: qtwaylandscanner writes to stdout (unlike wayland-scanner which accepts
+# an output file argument).  CMake's add_custom_command does not support shell
+# output redirection, so we use a small cmake -P script with execute_process
+# to capture stdout into a file.
+set(CAPTURE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/capture_stdout.cmake")
+file(WRITE "${CAPTURE_SCRIPT}" [=[
+separate_arguments(ARG_LIST UNIX_COMMAND "${ARGS}")
+execute_process(COMMAND "${CMD}" ${ARG_LIST} OUTPUT_FILE "${OUT}" RESULT_VARIABLE rc)
+if(NOT rc EQUAL 0)
+    message(FATAL_ERROR "${CMD} ${ARGS} failed with exit code ${rc}")
+endif()
+]=])
+
 set(LAYER_SHELL_CLIENT_HEADER
     "${CMAKE_CURRENT_BINARY_DIR}/qwayland-wlr-layer-shell-unstable-v1.h")
 set(LAYER_SHELL_CLIENT_SOURCE
@@ -52,7 +66,11 @@ set(LAYER_SHELL_CLIENT_SOURCE
 
 add_custom_command(
     OUTPUT ${LAYER_SHELL_CLIENT_HEADER}
-    COMMAND ${QT_WAYLAND_SCANNER} client-header ${LAYER_SHELL_XML} ${LAYER_SHELL_CLIENT_HEADER}
+    COMMAND ${CMAKE_COMMAND}
+        "-DCMD=${QT_WAYLAND_SCANNER}"
+        "-DARGS=client-header ${LAYER_SHELL_XML}"
+        "-DOUT=${LAYER_SHELL_CLIENT_HEADER}"
+        -P "${CAPTURE_SCRIPT}"
     COMMAND sed -i "s/\\bnamespace\\b/name_space/g" ${LAYER_SHELL_CLIENT_HEADER}
     DEPENDS ${LAYER_SHELL_XML}
     COMMENT "Generating layer-shell client header with qtwaylandscanner"
@@ -60,7 +78,11 @@ add_custom_command(
 
 add_custom_command(
     OUTPUT ${LAYER_SHELL_CLIENT_SOURCE}
-    COMMAND ${QT_WAYLAND_SCANNER} client-code ${LAYER_SHELL_XML} ${LAYER_SHELL_CLIENT_SOURCE}
+    COMMAND ${CMAKE_COMMAND}
+        "-DCMD=${QT_WAYLAND_SCANNER}"
+        "-DARGS=client-code ${LAYER_SHELL_XML}"
+        "-DOUT=${LAYER_SHELL_CLIENT_SOURCE}"
+        -P "${CAPTURE_SCRIPT}"
     COMMAND sed -i "s/\\bnamespace\\b/name_space/g" ${LAYER_SHELL_CLIENT_SOURCE}
     DEPENDS ${LAYER_SHELL_XML} ${LAYER_SHELL_CLIENT_HEADER}
     COMMENT "Generating layer-shell client code with qtwaylandscanner"
