@@ -43,3 +43,4 @@ docs/sysinfo.txt
 
 # Generated files
 *.sha256
+live-build-config/binary.hybrid.iso.zsync.xz
