@@ -15,6 +15,8 @@ lb config noauto \
     --initsystem systemd \
     --linux-packages "linux-image" \
     --linux-flavours "amd64" \
+    --firmware-chroot false \
+    --firmware-binary false \
     --security false \
     --mirror-bootstrap "http://deb.debian.org/debian" \
     --mirror-binary "http://deb.debian.org/debian" \
