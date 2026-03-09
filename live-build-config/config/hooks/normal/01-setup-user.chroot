@@ -16,6 +16,10 @@ passwd -d nakumi
 echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel-nopasswd
 chmod 0440 /etc/sudoers.d/wheel-nopasswd
 
+# Disable getty on tty1 — greetd will exclusively own vt1 for the graphical session.
+# Other TTYs (tty2–tty6) remain available for emergency text login.
+systemctl mask getty@tty1.service || true
+
 # Ensure greetd is enabled
 systemctl enable greetd.service || true
 

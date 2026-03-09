@@ -32,6 +32,7 @@ greetd
 pipewire
 wireplumber
 open-vm-tools
+htop
 grim
 slurp
 jq

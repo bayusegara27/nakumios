@@ -123,6 +123,27 @@ jobs:
           cd build
           ctest --output-on-failure || true
 
+      - name: Package built binaries for ISO
+        run: |
+          mkdir -p /tmp/nakumi-binaries/usr/bin
+          mkdir -p /tmp/nakumi-binaries/usr/lib
+          cp nakumi-wm/builddir/nakumi-wm /tmp/nakumi-binaries/usr/bin/
+          cp nakumi-de/panel/build/nakumi-panel /tmp/nakumi-binaries/usr/bin/
+          cp nakumi-de/launcher/build/nakumi-launcher /tmp/nakumi-binaries/usr/bin/
+          cp nakumi-apps/nakumi-term/build/nakumi-term /tmp/nakumi-binaries/usr/bin/
+          cp nakumi-apps/nakumi-files/build/nakumi-files /tmp/nakumi-binaries/usr/bin/
+          cp nakumi-apps/nakumi-edit/build/nakumi-edit /tmp/nakumi-binaries/usr/bin/
+          cp nakumi-apps/nakumi-settings/build/nakumi-settings /tmp/nakumi-binaries/usr/bin/
+          cp -a /usr/lib/*/libwlroots-0.18.so* /tmp/nakumi-binaries/usr/lib/ 2>/dev/null || \
+            cp -a /usr/lib/libwlroots-0.18.so* /tmp/nakumi-binaries/usr/lib/ 2>/dev/null || true
+
+      - name: Upload built binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: nakumi-binaries
+          path: /tmp/nakumi-binaries/
+          retention-days: 1
+
   # ==============================================================================
   # Job 2: Build the live ISO (on main branch push or tag push)
   # ==============================================================================
@@ -136,6 +157,20 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Download built binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: nakumi-binaries
+          path: /tmp/nakumi-binaries/
+
+      - name: Install binaries into chroot overlay
+        run: |
+          mkdir -p live-build-config/config/includes.chroot/usr/bin
+          mkdir -p live-build-config/config/includes.chroot/usr/lib
+          cp /tmp/nakumi-binaries/usr/bin/* live-build-config/config/includes.chroot/usr/bin/
+          cp -a /tmp/nakumi-binaries/usr/lib/* live-build-config/config/includes.chroot/usr/lib/ 2>/dev/null || true
+          chmod +x live-build-config/config/includes.chroot/usr/bin/*
 
       - name: Install live-build
         run: |
