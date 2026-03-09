@@ -114,6 +114,8 @@ jobs:
           cmake --build build
 
       - name: Run unit tests
+        env:
+          QT_QPA_PLATFORM: offscreen
         run: |
           cd tests
           cmake -B build -DCMAKE_PREFIX_PATH=/usr
@@ -122,14 +124,14 @@ jobs:
           ctest --output-on-failure || true
 
   # ==============================================================================
-  # Job 2: Build the live ISO (only on tag push)
+  # Job 2: Build the live ISO (on main branch push or tag push)
   # ==============================================================================
   build-iso:
     runs-on: ubuntu-latest
     permissions:
       contents: read
     needs: build-and-test
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
 
     steps:
       - name: Checkout repository
