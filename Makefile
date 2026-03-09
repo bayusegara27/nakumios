@@ -27,7 +27,7 @@ CHROOT_BIN   := live-build-config/config/includes.chroot/usr/bin
 CHROOT_APPS  := live-build-config/config/includes.chroot/usr/share/applications
 CHROOT_LIB   := live-build-config/config/includes.chroot/usr/lib
 QEMU_MEM     := 2048
-QEMU_CPUS    := 2
+QEMU_CPUS    := 4
 VERSION      := 1.0.0
 
 # ==============================================================================
@@ -133,7 +133,7 @@ run:
 	qemu-system-x86_64 \
 		-enable-kvm \
 		-m $(QEMU_MEM) \
-		-smp $(QEMU_CPUS) \
+		-smp $(QEMU_CPUS),sockets=1,cores=$(QEMU_CPUS),threads=1 \
 		-cdrom $(ISO_FILE) \
 		-boot d \
 		-vga virtio \
@@ -162,7 +162,7 @@ test-automation:
 	timeout 180 qemu-system-x86_64 \
 		-enable-kvm \
 		-m $(QEMU_MEM) \
-		-smp $(QEMU_CPUS) \
+		-smp $(QEMU_CPUS),sockets=1,cores=$(QEMU_CPUS),threads=1 \
 		-cdrom $(ISO_FILE) \
 		-boot d \
 		-vga virtio \

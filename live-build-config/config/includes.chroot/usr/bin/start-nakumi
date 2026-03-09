@@ -21,6 +21,12 @@ if [ -z "$XDG_RUNTIME_DIR" ]; then
     fi
 fi
 
+# === Logging helper ===
+log() {
+    echo "$1"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') $1" >> /tmp/nakumi-session.log
+}
+
 # === VM Resilience: Software Rendering Fallback ===
 # Detect if we are in a VM or if GPU/DRM is unavailable.
 detect_vm() {
@@ -40,17 +46,32 @@ detect_vm() {
     return 1
 }
 
-# Check if hardware rendering is available
+# Check if hardware rendering is available (DRI render nodes present)
 has_gpu_render() {
-    # Check for DRI render nodes
     if ls /dev/dri/renderD* >/dev/null 2>&1; then
         return 0
     fi
     return 1
 }
 
-if detect_vm || ! has_gpu_render; then
-    echo "[NakumiOS] VM or missing GPU detected, enabling software rendering fallback."
+if detect_vm; then
+    log "[NakumiOS] Virtual machine detected."
+    # Hardware cursors are unreliable in VMs — always disable
+    export WLR_NO_HARDWARE_CURSORS=1
+
+    if has_gpu_render; then
+        # VM has GPU acceleration (e.g., VMware 3D, virtio-gpu, VirtualBox 3D).
+        # Let wlroots auto-select the best renderer (gles2/vulkan) instead of
+        # forcing pixman, which can fail with VM GPU drivers like vmwgfx.
+        log "[NakumiOS] GPU render node found — using hardware-accelerated rendering."
+    else
+        # VM without GPU acceleration — must use software rendering
+        log "[NakumiOS] No GPU render node — enabling software rendering (pixman)."
+        export WLR_RENDERER=pixman
+        export LIBGL_ALWAYS_SOFTWARE=1
+    fi
+elif ! has_gpu_render; then
+    log "[NakumiOS] No GPU detected, enabling software rendering (pixman)."
     export WLR_RENDERER=pixman
     export LIBGL_ALWAYS_SOFTWARE=1
     export WLR_NO_HARDWARE_CURSORS=1
@@ -74,4 +95,25 @@ fi
 # === Launch the Compositor ===
 # The -s flag starts a startup command after the Wayland socket is ready.
 # This launches the panel and launcher inside the compositor session.
-exec nakumi-wm -s "nakumi-panel & nakumi-launcher"
+#
+# If the compositor crashes immediately (e.g., GPU driver issue), fall back
+# to software rendering and retry once.
+log "[NakumiOS] Starting compositor..."
+nakumi-wm -s "nakumi-panel & nakumi-launcher" &
+WM_PID=$!
+
+# Give the compositor a moment to initialise
+sleep 2
+
+if kill -0 "$WM_PID" 2>/dev/null; then
+    # Compositor is running — wait for it to exit normally
+    log "[NakumiOS] Compositor running (PID $WM_PID)."
+    wait "$WM_PID"
+else
+    # Compositor died during startup — retry with software rendering
+    log "[NakumiOS] Compositor crashed, retrying with software rendering (pixman)..."
+    export WLR_RENDERER=pixman
+    export LIBGL_ALWAYS_SOFTWARE=1
+    export WLR_NO_HARDWARE_CURSORS=1
+    exec nakumi-wm -s "nakumi-panel & nakumi-launcher"
+fi

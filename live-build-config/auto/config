@@ -23,6 +23,7 @@ lb config noauto \
     --parent-mirror-bootstrap "http://deb.debian.org/debian" \
     --parent-mirror-binary "http://deb.debian.org/debian" \
     --bootstrap-keyring debian-archive-keyring \
+    --bootappend-live "boot=live components username=nakumi noautologin" \
     --iso-application "NakumiOS" \
     --iso-publisher "NakumiOS Project" \
     --iso-volume "NakumiOS 1.0" \
