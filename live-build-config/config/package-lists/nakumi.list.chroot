@@ -1,4 +1,6 @@
 linux-image-amd64
+isolinux
+syslinux-common
 systemd
 systemd-sysv
 live-boot
