@@ -149,6 +149,10 @@ jobs:
           sudo lb build
         timeout-minutes: 60
 
+      - name: Rename ISO
+        run: |
+          mv live-build-config/binary.hybrid.iso live-build-config/${{ env.ISO_NAME }}.iso
+
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
         with:
