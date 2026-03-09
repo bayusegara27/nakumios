@@ -138,17 +138,17 @@ A system configuration tool with sidebar navigation.
 
 NakumiOS uses a consistent dark theme across all applications.
 
-| Token | Value | Preview |
-|-------|-------|---------|
-| Background | `#1A1A24` | ![#1A1A24](https://via.placeholder.com/20/1A1A24/1A1A24) |
-| Accent | `#6C5CE7` | ![#6C5CE7](https://via.placeholder.com/20/6C5CE7/6C5CE7) |
-| Text | `#E2E8F0` | ![#E2E8F0](https://via.placeholder.com/20/E2E8F0/E2E8F0) |
-| Secondary | `#A0A0B0` | ![#A0A0B0](https://via.placeholder.com/20/A0A0B0/A0A0B0) |
-| Surface | `#12121A` | ![#12121A](https://via.placeholder.com/20/12121A/12121A) |
-| Hover | `#2D2D3F` | ![#2D2D3F](https://via.placeholder.com/20/2D2D3F/2D2D3F) |
-| Border Radius | `12px` | — |
-| Font (Body) | 13px sans-serif | — |
-| Font (Code) | 14px monospace | — |
+| Token | Value | Description |
+|-------|-------|-------------|
+| Background | `#1A1A24` | Dark navy base |
+| Accent | `#6C5CE7` | Purple highlights & focus |
+| Text | `#E2E8F0` | Light slate primary text |
+| Secondary | `#A0A0B0` | Gray secondary text |
+| Surface | `#12121A` | Darker background for bars |
+| Hover | `#2D2D3F` | Elevated surface on hover |
+| Border Radius | `12px` | Panels & buttons |
+| Font (Body) | 13px sans-serif | UI labels & text |
+| Font (Code) | 14px monospace | Terminal & editor |
 
 ---
 
