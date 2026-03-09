@@ -6,11 +6,10 @@ lb config noauto \
     --archive-areas "main contrib non-free non-free-firmware" \
     --architectures amd64 \
     --binary-images iso-hybrid \
-    --bootloaders "grub-efi syslinux" \
+    --bootloader syslinux \
     --debian-installer false \
     --memtest none \
     --iso-application "NakumiOS" \
     --iso-publisher "NakumiOS Project" \
     --iso-volume "NakumiOS 1.0" \
-    --image-name "nakumios-1.0-amd64" \
     "${@}"
