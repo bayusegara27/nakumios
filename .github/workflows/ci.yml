@@ -134,8 +134,10 @@ jobs:
           cp nakumi-apps/nakumi-files/build/nakumi-files /tmp/nakumi-binaries/usr/bin/
           cp nakumi-apps/nakumi-edit/build/nakumi-edit /tmp/nakumi-binaries/usr/bin/
           cp nakumi-apps/nakumi-settings/build/nakumi-settings /tmp/nakumi-binaries/usr/bin/
-          cp -a /usr/lib/*/libwlroots-0.18.so* /tmp/nakumi-binaries/usr/lib/ 2>/dev/null || \
-            cp -a /usr/lib/libwlroots-0.18.so* /tmp/nakumi-binaries/usr/lib/ 2>/dev/null || true
+          if ! cp -a /usr/lib/*/libwlroots-0.18.so* /tmp/nakumi-binaries/usr/lib/ 2>/dev/null && \
+             ! cp -a /usr/lib/libwlroots-0.18.so* /tmp/nakumi-binaries/usr/lib/ 2>/dev/null; then
+            echo "WARNING: wlroots shared library not found — nakumi-wm may fail at runtime"
+          fi
 
       - name: Upload built binaries
         uses: actions/upload-artifact@v4
@@ -169,8 +171,14 @@ jobs:
           mkdir -p live-build-config/config/includes.chroot/usr/bin
           mkdir -p live-build-config/config/includes.chroot/usr/lib
           cp /tmp/nakumi-binaries/usr/bin/* live-build-config/config/includes.chroot/usr/bin/
-          cp -a /tmp/nakumi-binaries/usr/lib/* live-build-config/config/includes.chroot/usr/lib/ 2>/dev/null || true
+          if ls /tmp/nakumi-binaries/usr/lib/* >/dev/null 2>&1; then
+            cp -a /tmp/nakumi-binaries/usr/lib/* live-build-config/config/includes.chroot/usr/lib/
+          else
+            echo "WARNING: No shared libraries found in binary artifact"
+          fi
           chmod +x live-build-config/config/includes.chroot/usr/bin/*
+          echo "==> Installed binaries:"
+          ls -la live-build-config/config/includes.chroot/usr/bin/
 
       - name: Install live-build
         run: |
