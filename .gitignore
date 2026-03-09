@@ -16,6 +16,11 @@ live-build-config/chroot/
 live-build-config/.stage/
 live-build-config/binary.contents
 live-build-config/build.log
+live-build-config/config/binary
+live-build-config/config/bootstrap
+live-build-config/config/chroot
+live-build-config/config/common
+live-build-config/config/source
 
 # IDE
 .vscode/
