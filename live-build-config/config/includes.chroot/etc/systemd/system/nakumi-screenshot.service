@@ -1,0 +1,16 @@
+[Unit]
+Description=NakumiOS Automated Desktop Screenshot Capture
+After=graphical.target
+Wants=graphical.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/nakumi-screenshot --wait 45
+User=nakumi
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=120
+
+[Install]
+WantedBy=graphical.target

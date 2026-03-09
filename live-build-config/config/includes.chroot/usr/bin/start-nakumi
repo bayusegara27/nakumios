@@ -1,0 +1,77 @@
+#!/bin/bash
+# start-nakumi - Wayland session launcher for NakumiOS
+# Launched by greetd as the default session command.
+
+set -e
+
+# === Core Wayland Environment ===
+export XDG_SESSION_TYPE=wayland
+export XDG_CURRENT_DESKTOP=NakumiOS
+export XDG_SESSION_DESKTOP=NakumiOS
+export QT_QPA_PLATFORM=wayland
+export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+export MOZ_ENABLE_WAYLAND=1
+
+# === XDG Runtime Directory ===
+if [ -z "$XDG_RUNTIME_DIR" ]; then
+    export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+    if [ ! -d "$XDG_RUNTIME_DIR" ]; then
+        mkdir -p "$XDG_RUNTIME_DIR"
+        chmod 0700 "$XDG_RUNTIME_DIR"
+    fi
+fi
+
+# === VM Resilience: Software Rendering Fallback ===
+# Detect if we are in a VM or if GPU/DRM is unavailable.
+detect_vm() {
+    if [ -f /sys/class/dmi/id/product_name ]; then
+        product=$(cat /sys/class/dmi/id/product_name 2>/dev/null || echo "")
+        case "$product" in
+            *VirtualBox*|*VMware*|*QEMU*|*KVM*|*Bochs*)
+                return 0
+                ;;
+        esac
+    fi
+    if command -v systemd-detect-virt >/dev/null 2>&1; then
+        if systemd-detect-virt -q 2>/dev/null; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+# Check if hardware rendering is available
+has_gpu_render() {
+    # Check for DRI render nodes
+    if ls /dev/dri/renderD* >/dev/null 2>&1; then
+        return 0
+    fi
+    return 1
+}
+
+if detect_vm || ! has_gpu_render; then
+    echo "[NakumiOS] VM or missing GPU detected, enabling software rendering fallback."
+    export WLR_RENDERER=pixman
+    export LIBGL_ALWAYS_SOFTWARE=1
+    export WLR_NO_HARDWARE_CURSORS=1
+fi
+
+# === D-Bus Session ===
+if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
+    eval "$(dbus-launch --sh-syntax)"
+    export DBUS_SESSION_BUS_ADDRESS
+fi
+
+# === PipeWire Audio ===
+if command -v pipewire >/dev/null 2>&1; then
+    pipewire &
+    sleep 0.5
+    if command -v wireplumber >/dev/null 2>&1; then
+        wireplumber &
+    fi
+fi
+
+# === Launch the Compositor ===
+# The -s flag starts a startup command after the Wayland socket is ready.
+# This launches the panel and launcher inside the compositor session.
+exec nakumi-wm -s "nakumi-panel & nakumi-launcher"

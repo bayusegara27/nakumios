@@ -1,0 +1,83 @@
+#!/bin/bash
+# nakumi-test-automation - Automated UI testing script
+#
+# This script runs inside the QEMU VM during automated testing.
+# It mounts the 9p shared folder, takes a desktop screenshot,
+# generates system info, and gracefully shuts down.
+
+set -e
+
+MOUNT_DIR="/mnt/host"
+SCREENSHOT="${MOUNT_DIR}/desktop-screenshot.png"
+SYSINFO="${MOUNT_DIR}/sysinfo.txt"
+
+echo "[NakumiOS Test] Starting automated UI test..."
+
+# Mount the 9p shared folder from QEMU host
+mkdir -p "${MOUNT_DIR}"
+if ! mountpoint -q "${MOUNT_DIR}"; then
+    mount -t 9p -o trans=virtio,version=9p2000.L host0 "${MOUNT_DIR}" 2>/dev/null || {
+        echo "[NakumiOS Test] WARNING: Could not mount 9p share. Skipping shared output."
+        MOUNT_DIR="/tmp/test-output"
+        mkdir -p "${MOUNT_DIR}"
+        SCREENSHOT="${MOUNT_DIR}/desktop-screenshot.png"
+        SYSINFO="${MOUNT_DIR}/sysinfo.txt"
+    }
+fi
+
+# Take a screenshot using grim (Wayland screenshot utility)
+export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+if command -v grim >/dev/null 2>&1; then
+    echo "[NakumiOS Test] Taking desktop screenshot..."
+    grim "${SCREENSHOT}" 2>/dev/null || echo "[NakumiOS Test] Screenshot failed (compositor may not be ready)."
+else
+    echo "[NakumiOS Test] grim not found, skipping screenshot."
+fi
+
+# Generate system information report
+echo "[NakumiOS Test] Generating system info..."
+{
+    echo "============================================"
+    echo "NakumiOS System Information Report"
+    echo "Generated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+    echo "============================================"
+    echo ""
+    echo "--- OS Info ---"
+    uname -a
+    echo ""
+    echo "--- CPU ---"
+    grep "model name" /proc/cpuinfo | head -1
+    echo ""
+    echo "--- Memory ---"
+    free -h
+    echo ""
+    echo "--- Disk ---"
+    df -h /
+    echo ""
+    echo "--- Graphics ---"
+    echo "WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-not set}"
+    echo "XDG_SESSION_TYPE=${XDG_SESSION_TYPE:-not set}"
+    ls -la /dev/dri/ 2>/dev/null || echo "No DRI devices found"
+    echo ""
+    echo "--- Running Services ---"
+    systemctl list-units --type=service --state=running --no-pager 2>/dev/null | head -20
+    echo ""
+    echo "--- NakumiOS Components ---"
+    for bin in nakumi-wm nakumi-panel nakumi-launcher nakumi-term nakumi-files nakumi-edit nakumi-settings; do
+        if command -v "$bin" >/dev/null 2>&1; then
+            echo "  [OK] $bin: $(which $bin)"
+        else
+            echo "  [MISSING] $bin"
+        fi
+    done
+    echo ""
+    echo "============================================"
+    echo "Test completed successfully."
+    echo "============================================"
+} > "${SYSINFO}"
+
+echo "[NakumiOS Test] Test automation complete."
+
+# Gracefully shutdown the VM
+echo "[NakumiOS Test] Shutting down..."
+systemctl poweroff

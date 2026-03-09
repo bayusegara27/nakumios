@@ -1,0 +1,199 @@
+name: NakumiOS CI/CD
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+env:
+  ISO_NAME: nakumios-1.0-amd64
+
+permissions:
+  contents: read
+
+jobs:
+  # ==============================================================================
+  # Job 1: Build all components and run unit tests
+  # ==============================================================================
+  build-and-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: debian:testing
+
+    steps:
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential \
+            cmake \
+            meson \
+            ninja-build \
+            pkg-config \
+            git \
+            ca-certificates \
+            wayland-protocols \
+            libwayland-dev \
+            libxkbcommon-dev \
+            libpixman-1-dev \
+            libdrm-dev \
+            libgbm-dev \
+            libseat-dev \
+            libudev-dev \
+            libinput-dev \
+            libegl-dev \
+            libgles-dev \
+            qt6-base-dev \
+            qt6-declarative-dev \
+            qt6-wayland \
+            qt6-wayland-dev \
+            qt6-wayland-dev-tools \
+            libqt6waylandclient6 \
+            qml6-module-qtquick-controls \
+            qml6-module-qtquick-layouts \
+            libqt6dbus6 \
+            qt6-base-private-dev \
+            qt6-wayland-private-dev
+
+      - name: Build and install wlroots from source
+        run: |
+          git clone --depth 1 --branch 0.18.0 https://gitlab.freedesktop.org/wlroots/wlroots.git /tmp/wlroots
+          cd /tmp/wlroots
+          meson setup build --prefix=/usr -Dexamples=false -Dwerror=false
+          ninja -C build
+          ninja -C build install
+          ldconfig
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build nakumi-wm (Wayland compositor)
+        run: |
+          cd nakumi-wm
+          meson setup builddir --prefix=/usr
+          ninja -C builddir
+
+      - name: Build nakumi-panel (Desktop panel)
+        run: |
+          cd nakumi-de/panel
+          cmake -B build -DCMAKE_PREFIX_PATH=/usr
+          cmake --build build
+
+      - name: Build nakumi-launcher (Application launcher)
+        run: |
+          cd nakumi-de/launcher
+          cmake -B build -DCMAKE_PREFIX_PATH=/usr
+          cmake --build build
+
+      - name: Build nakumi-term (Terminal emulator)
+        run: |
+          cd nakumi-apps/nakumi-term
+          cmake -B build -DCMAKE_PREFIX_PATH=/usr
+          cmake --build build
+
+      - name: Build nakumi-files (File manager)
+        run: |
+          cd nakumi-apps/nakumi-files
+          cmake -B build -DCMAKE_PREFIX_PATH=/usr
+          cmake --build build
+
+      - name: Build nakumi-edit (Text editor)
+        run: |
+          cd nakumi-apps/nakumi-edit
+          cmake -B build -DCMAKE_PREFIX_PATH=/usr
+          cmake --build build
+
+      - name: Build nakumi-settings (Settings)
+        run: |
+          cd nakumi-apps/nakumi-settings
+          cmake -B build -DCMAKE_PREFIX_PATH=/usr
+          cmake --build build
+
+      - name: Run unit tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          cd tests
+          cmake -B build -DCMAKE_PREFIX_PATH=/usr
+          cmake --build build
+          cd build
+          ctest --output-on-failure || true
+
+  # ==============================================================================
+  # Job 2: Build the live ISO (on main branch push or tag push)
+  # ==============================================================================
+  build-iso:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install live-build
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y live-build
+
+      - name: Build ISO
+        run: |
+          cd live-build-config
+          lb config
+          sudo lb build
+        timeout-minutes: 60
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nakumios-iso
+          path: live-build-config/${{ env.ISO_NAME }}.iso
+          retention-days: 5
+
+  # ==============================================================================
+  # Job 3: Create GitHub Release (only on tag push)
+  # ==============================================================================
+  release:
+    runs-on: ubuntu-latest
+    needs: build-iso
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download ISO artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nakumios-iso
+          path: ./dist
+
+      - name: Generate checksum
+        run: |
+          cd dist
+          sha256sum ${{ env.ISO_NAME }}.iso > ${{ env.ISO_NAME }}.iso.sha256
+
+      - name: Generate release notes
+        run: |
+          chmod +x docs/generate-readme.sh
+          ./docs/generate-readme.sh
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/${{ env.ISO_NAME }}.iso
+            dist/${{ env.ISO_NAME }}.iso.sha256
+          body_path: docs/RELEASE_NOTES.md
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

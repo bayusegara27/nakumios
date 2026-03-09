@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=NakumiEdit
+Comment=NakumiOS Text Editor
+Exec=nakumi-edit %f
+Icon=accessories-text-editor
+Type=Application
+Categories=Utility;TextEditor;
+Keywords=text;editor;code;syntax;
+MimeType=text/plain;text/x-csrc;text/x-c++src;application/x-shellscript;

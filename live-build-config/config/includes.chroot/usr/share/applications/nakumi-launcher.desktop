@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=NakumiLauncher
+Comment=NakumiOS Application Launcher
+Exec=nakumi-launcher
+Icon=system-search
+Type=Application
+Categories=System;
+Keywords=launcher;menu;apps;
+NoDisplay=true
