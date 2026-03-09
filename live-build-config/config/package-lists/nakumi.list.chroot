@@ -1,4 +1,8 @@
 linux-image-amd64
+firmware-linux-free
+isolinux
+syslinux-common
+syslinux-utils
 systemd
 systemd-sysv
 live-boot

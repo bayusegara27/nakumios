@@ -2,21 +2,26 @@
 set -e
 
 lb config noauto \
+    --mode debian \
     --distribution testing \
     --archive-areas "main contrib non-free non-free-firmware" \
     --architectures amd64 \
     --binary-images iso-hybrid \
     --bootloader syslinux \
+    --syslinux-theme live-build \
     --debian-installer false \
     --memtest none \
+    --initramfs live-boot \
+    --initsystem systemd \
+    --linux-packages "linux-image" \
+    --linux-flavours "amd64" \
+    --firmware-chroot false \
+    --firmware-binary false \
+    --security false \
     --mirror-bootstrap "http://deb.debian.org/debian" \
-    --mirror-chroot-security "http://security.debian.org/debian-security" \
     --mirror-binary "http://deb.debian.org/debian" \
-    --mirror-binary-security "http://security.debian.org/debian-security" \
     --parent-mirror-bootstrap "http://deb.debian.org/debian" \
-    --parent-mirror-chroot-security "http://security.debian.org/debian-security" \
     --parent-mirror-binary "http://deb.debian.org/debian" \
-    --parent-mirror-binary-security "http://security.debian.org/debian-security" \
     --bootstrap-keyring debian-archive-keyring \
     --iso-application "NakumiOS" \
     --iso-publisher "NakumiOS Project" \
