@@ -9,6 +9,8 @@ lb config noauto \
     --bootloader syslinux \
     --debian-installer false \
     --memtest none \
+    --linux-packages "linux-image" \
+    --linux-flavours "amd64" \
     --mirror-bootstrap "http://deb.debian.org/debian" \
     --mirror-chroot-security "http://security.debian.org/debian-security" \
     --mirror-binary "http://deb.debian.org/debian" \

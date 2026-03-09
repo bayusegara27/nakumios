@@ -145,7 +145,7 @@ jobs:
       - name: Build ISO
         run: |
           cd live-build-config
-          lb config
+          sudo lb config
           sudo lb build
         timeout-minutes: 60
 
