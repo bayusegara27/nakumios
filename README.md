@@ -28,6 +28,20 @@
 | ![Desktop Init](docs/screenshots/04-desktop.png) | ![Login](docs/screenshots/05-login.png) |
 | Services starting (NetworkManager, PipeWire, greetd) | Auto-login via greetd → Wayland desktop |
 
+### Desktop Environment
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/7c4ee6b3-3c4a-4226-b013-5641cdd277b4" alt="NakumiOS Desktop" width="720" />
+</p>
+<p align="center"><em>NakumiOS Wayland desktop with bottom panel, system tray, and dark theme</em></p>
+
+### Applications
+
+| Desktop & Panel | System Monitor (htop) |
+|:---------------:|:---------------------:|
+| ![Desktop with Apps](https://github.com/user-attachments/assets/37038710-c24b-4282-b972-82e28d7de99b) | ![htop CPU Monitor](https://github.com/user-attachments/assets/418eddda-ba85-4b33-b8e2-e4431389bc85) |
+| nakumi-panel taskbar with launcher, clock, and session controls | htop showing CPU core utilization and system processes |
+
 ---
 
 ## ✨ Features
@@ -227,11 +241,14 @@ make publish
 
 ## 🖥️ VM & Hardware Support
 
-NakumiOS includes automatic VM detection and software rendering fallback:
+NakumiOS includes automatic VM detection and smart rendering selection:
 
 - **Detection:** Reads `/sys/class/dmi/id/product_name` for VirtualBox, VMware, QEMU, KVM, Bochs
 - **Fallback:** `systemd-detect-virt -q` as secondary check
-- **Software rendering:** Automatically exports `WLR_RENDERER=pixman`, `LIBGL_ALWAYS_SOFTWARE=1`, `WLR_NO_HARDWARE_CURSORS=1`
+- **GPU-aware:** If DRI render nodes (`/dev/dri/renderD*`) are present, uses hardware-accelerated rendering even in VMs
+- **Software rendering:** Falls back to `WLR_RENDERER=pixman` + `LIBGL_ALWAYS_SOFTWARE=1` only when no GPU is available
+- **Cursor fix:** Always sets `WLR_NO_HARDWARE_CURSORS=1` in VMs for reliable cursor display
+- **QEMU recommended:** `make run` uses `-smp 4,sockets=1,cores=4,threads=1` and `-vga virtio` for proper multi-core and GPU support
 
 ---
 
@@ -249,7 +266,8 @@ NakumiOS includes automatic VM detection and software rendering fallback:
 | **Desktop** | `qt6-wayland`, `qml6-module-qtquick-controls`, `qml6-module-qtquick-layouts` |
 | **Fonts** | `fonts-noto` |
 | **Icons** | `papirus-icon-theme` |
-| **Tools** | `grim` (screenshot), `slurp` (region select), `curl`, `jq` |
+| **Tools** | `grim` (screenshot), `slurp` (region select), `htop` (process monitor), `curl`, `jq` |
+| **VM Support** | `open-vm-tools` (VMware guest integration) |
 
 ---
 
