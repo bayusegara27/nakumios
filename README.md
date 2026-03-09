@@ -21,26 +21,14 @@
 | ![Boot Menu](docs/screenshots/01-boot-menu.png) | ![Kernel Boot](docs/screenshots/02-kernel-boot.png) | ![Boot Progress](docs/screenshots/03-boot-progress.png) |
 | ISOLINUX boot menu with NakumiOS branding | Linux kernel loading from live ISO | systemd services initializing |
 
-### System Ready
+### Desktop Init
 
-| System Services | Login Ready |
-|:---------------:|:-----------:|
-| ![Desktop Init](docs/screenshots/04-desktop.png) | ![Login](docs/screenshots/05-login.png) |
-| Services starting (NetworkManager, PipeWire, greetd) | Auto-login via greetd → Wayland desktop |
+| System Services | Desktop Startup |
+|:---------------:|:---------------:|
+| ![Desktop Init](docs/screenshots/04-desktop.png) | ![Desktop Startup](docs/screenshots/04-desktop-init.png) |
+| Services starting (NetworkManager, PipeWire, greetd) | greetd launching nakumi-wm Wayland compositor on vt1 |
 
-### Desktop Environment
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/7c4ee6b3-3c4a-4226-b013-5641cdd277b4" alt="NakumiOS Desktop" width="720" />
-</p>
-<p align="center"><em>NakumiOS Wayland desktop with bottom panel, system tray, and dark theme</em></p>
-
-### Applications
-
-| Desktop & Panel | System Monitor (htop) |
-|:---------------:|:---------------------:|
-| ![Desktop with Apps](https://github.com/user-attachments/assets/37038710-c24b-4282-b972-82e28d7de99b) | ![htop CPU Monitor](https://github.com/user-attachments/assets/418eddda-ba85-4b33-b8e2-e4431389bc85) |
-| nakumi-panel taskbar with launcher, clock, and session controls | htop showing CPU core utilization and system processes |
+> **Note:** Desktop and application screenshots will be added once the full graphical session is verified via `make test-automation`. The compositor (`nakumi-wm`) renders through DRM/KMS on the Wayland display — use `make run` with KVM to see the live desktop.
 
 ---
 
