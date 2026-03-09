@@ -9,6 +9,15 @@ lb config noauto \
     --bootloader syslinux \
     --debian-installer false \
     --memtest none \
+    --mirror-bootstrap "http://deb.debian.org/debian" \
+    --mirror-chroot-security "http://security.debian.org/debian-security" \
+    --mirror-binary "http://deb.debian.org/debian" \
+    --mirror-binary-security "http://security.debian.org/debian-security" \
+    --parent-mirror-bootstrap "http://deb.debian.org/debian" \
+    --parent-mirror-chroot-security "http://security.debian.org/debian-security" \
+    --parent-mirror-binary "http://deb.debian.org/debian" \
+    --parent-mirror-binary-security "http://security.debian.org/debian-security" \
+    --debootstrap-options "--keyring=/usr/share/keyrings/debian-archive-keyring.gpg" \
     --iso-application "NakumiOS" \
     --iso-publisher "NakumiOS Project" \
     --iso-volume "NakumiOS 1.0" \
