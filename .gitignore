@@ -4,6 +4,7 @@
 *.a
 *.iso
 *.img
+*.ppm
 build/
 _build/
 builddir/
