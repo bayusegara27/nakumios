@@ -71,8 +71,11 @@ int main(int argc, char *argv[]) {
     fileMenu->addAction(QStringLiteral("&Quit"), &app, &QApplication::quit, QKeySequence::Quit);
 
     /* Status bar */
+    auto *statusBar = window.statusBar();
     QObject::connect(editor, &Editor::statusMessage,
-                     window.statusBar(), &QStatusBar::showMessage);
+                     statusBar, [statusBar](const QString &msg) {
+                         statusBar->showMessage(msg);
+                     });
 
     /* Open file from command line argument */
     if (argc > 1) {
